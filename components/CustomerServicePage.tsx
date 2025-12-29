@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 
 interface CustomerServicePageProps {
   onBack: () => void;
@@ -9,6 +10,45 @@ interface CustomerServicePageProps {
 export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack, onOpenChat }) => {
   const [isSending, setIsSending] = useState(false);
   const [formSent, setFormSent] = useState(false);
+  const [contactLinks, setContactLinks] = useState<any>(null);
+  const [showFeedback, setShowFeedback] = useState<{ type: 'error' | 'success', message: string } | null>(null);
+
+  useEffect(() => {
+    loadContactLinks();
+  }, []);
+
+  const loadContactLinks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('atendimento_links')
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      if (data) setContactLinks(data);
+    } catch (error) {
+      console.error('Error loading contact links:', error);
+    }
+  };
+
+  const triggerFeedback = (type: 'error' | 'success', message: string) => {
+    setShowFeedback({ type, message });
+    setTimeout(() => setShowFeedback(null), 4000);
+  };
+
+  const handleChannelClick = (url: string | null, channelName: string) => {
+    if (!url || url.trim() === '') {
+      const messages: Record<string, string> = {
+        'WhatsApp Gerente': 'Prezado cliente, lamentamos por não conseguir entrar em contato com o gerente no momento. Por favor, aguarde ou tente mais tarde.',
+        'Grupo de Vendas': 'Prezado cliente, lamentamos por não conseguir entrar em contato com o grupo de vendas no momento. Por favor, aguarde ou tente mais tarde.',
+        'Canal Telegram': 'Prezado cliente, lamentamos por não conseguir acessar o canal do Telegram no momento. Por favor, aguarde ou tente mais tarde.',
+        'Atendimento': 'Prezado cliente, lamentamos por não conseguir entrar em contato com o atendimento no momento. Por favor, aguarde ou tente mais tarde.'
+      };
+      triggerFeedback('error', messages[channelName] || 'Serviço temporariamente indisponível.');
+      return;
+    }
+    window.open(url, '_blank');
+  };
 
   const contactChannels = [
     {
@@ -17,7 +57,7 @@ export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack
       desc: 'Suporte VIP e conta personalizada',
       icon: 'person_search',
       color: 'bg-[#25D366]',
-      action: () => window.open('https://wa.me/244900000000', '_blank')
+      urlKey: 'whatsapp_gerente_url'
     },
     {
       id: 'wa_group',
@@ -25,7 +65,7 @@ export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack
       desc: 'Novidades e promoções exclusivas',
       icon: 'groups',
       color: 'bg-[#128C7E]',
-      action: () => window.open('https://chat.whatsapp.com/invite/example', '_blank')
+      urlKey: 'whatsapp_grupo_vendas_url'
     },
     {
       id: 'telegram',
@@ -33,7 +73,7 @@ export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack
       desc: 'Comunidade oficial DeepBank',
       icon: 'send',
       color: 'bg-[#0088cc]',
-      action: () => window.open('https://t.me/deepbank_official', '_blank')
+      urlKey: 'telegram_canal_url'
     }
   ];
 
@@ -52,16 +92,16 @@ export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack
       {/* Header */}
       <div className="bg-white h-16 flex items-center justify-between sticky top-0 z-50 border-b border-gray-100 px-4">
         <div className="w-10">
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             className="w-10 h-10 flex items-center justify-center text-dark hover:bg-gray-50 rounded-full transition-all"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
         </div>
-        
+
         <h1 className="font-extrabold text-dark text-lg">Atendimento</h1>
-        
+
         <div className="w-10"></div>
       </div>
 
@@ -79,7 +119,7 @@ export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack
 
         {/* Channels Grid */}
         <div className="grid grid-cols-1 gap-4">
-          <button 
+          <button
             onClick={onOpenChat}
             className="w-full flex items-center gap-4 p-5 bg-primary text-white rounded-3xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
           >
@@ -94,9 +134,9 @@ export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack
 
           <div className="grid grid-cols-1 gap-3">
             {contactChannels.map((channel) => (
-              <button 
+              <button
                 key={channel.id}
-                onClick={channel.action}
+                onClick={() => handleChannelClick(contactLinks?.[channel.urlKey], channel.name)}
                 className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all text-left"
               >
                 <div className={`w-12 h-12 ${channel.color} text-white rounded-2xl flex items-center justify-center shrink-0`}>
@@ -122,31 +162,30 @@ export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack
           <form onSubmit={handleSendMessage} className="space-y-4">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Assunto</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Ex: Dúvida sobre saque"
                 className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm transition-all"
                 required
               />
             </div>
-            
+
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Sua Mensagem</label>
-              <textarea 
+              <textarea
                 placeholder="Descreva seu problema ou dúvida..."
                 className="w-full h-32 px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm resize-none transition-all"
                 required
               />
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={isSending || formSent}
-              className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${
-                formSent 
-                ? 'bg-green-500 text-white' 
-                : 'bg-dark text-white hover:bg-black shadow-lg shadow-dark/10'
-              }`}
+              className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${formSent
+                  ? 'bg-green-500 text-white'
+                  : 'bg-dark text-white hover:bg-black shadow-lg shadow-dark/10'
+                }`}
             >
               {isSending ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
