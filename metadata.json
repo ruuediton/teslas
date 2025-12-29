@@ -1,0 +1,8 @@
+{
+  "name": "DeepBank Finance",
+  "description": "A high-end financial dashboard mimicking DeepBank design, featuring AI-powered chat and video generation capabilities.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
