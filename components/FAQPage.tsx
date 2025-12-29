@@ -9,6 +9,7 @@ interface FAQItem {
 
 interface FAQPageProps {
   onBack: () => void;
+  onNavigateToSupport: () => void;
 }
 
 const FAQ_DATA: FAQItem[] = [
@@ -44,13 +45,13 @@ const FAQ_DATA: FAQItem[] = [
   }
 ];
 
-export const FAQPage: React.FC<FAQPageProps> = ({ onBack }) => {
+export const FAQPage: React.FC<FAQPageProps> = ({ onBack, onNavigateToSupport }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const filteredFaq = FAQ_DATA.filter(
-    item => 
-      item.question.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    item =>
+      item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.answer.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -63,16 +64,16 @@ export const FAQPage: React.FC<FAQPageProps> = ({ onBack }) => {
       {/* Header */}
       <div className="bg-white h-16 flex items-center justify-between sticky top-0 z-50 border-b border-gray-100 px-4">
         <div className="w-10">
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             className="w-10 h-10 flex items-center justify-center text-dark hover:bg-gray-50 rounded-full transition-all"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
         </div>
-        
+
         <h1 className="font-extrabold text-dark text-lg">Problemas comuns</h1>
-        
+
         <div className="w-10"></div>
       </div>
 
@@ -80,8 +81,8 @@ export const FAQPage: React.FC<FAQPageProps> = ({ onBack }) => {
         {/* Search Bar */}
         <div className="relative">
           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="O que você está procurando?"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -93,11 +94,11 @@ export const FAQPage: React.FC<FAQPageProps> = ({ onBack }) => {
         <div className="space-y-3">
           {filteredFaq.length > 0 ? (
             filteredFaq.map((item, index) => (
-              <div 
+              <div
                 key={index}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300"
               >
-                <button 
+                <button
                   onClick={() => toggleAccordion(index)}
                   className="w-full p-5 flex items-center justify-between text-left group"
                 >
@@ -111,18 +112,20 @@ export const FAQPage: React.FC<FAQPageProps> = ({ onBack }) => {
                     expand_more
                   </span>
                 </button>
-                
-                <div 
-                  className={`transition-all duration-300 ease-in-out ${
-                    expandedIndex === index ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'
-                  }`}
+
+                <div
+                  className={`transition-all duration-300 ease-in-out ${expandedIndex === index ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
                 >
                   <div className="p-5 pt-0 border-t border-gray-50">
                     <p className="text-xs text-gray-500 leading-relaxed">
                       {item.answer}
                     </p>
                     <div className="mt-4 pt-4 border-t border-gray-50 flex justify-end">
-                      <button className="text-[10px] font-bold text-primary uppercase flex items-center gap-1">
+                      <button
+                        onClick={onNavigateToSupport}
+                        className="text-[10px] font-bold text-primary uppercase flex items-center gap-1 hover:underline"
+                      >
                         Ainda com dúvida? Fale conosco
                         <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                       </button>
@@ -153,7 +156,10 @@ export const FAQPage: React.FC<FAQPageProps> = ({ onBack }) => {
             <p className="text-sm font-black">Precisa de ajuda humana?</p>
             <p className="text-[10px] text-white/70">Nosso time está disponível 24/7 para você.</p>
           </div>
-          <button className="bg-white text-primary p-2 rounded-xl">
+          <button
+            onClick={onNavigateToSupport}
+            className="bg-white text-primary p-2 rounded-xl hover:scale-110 transition-transform"
+          >
             <span className="material-symbols-outlined">chat_bubble</span>
           </button>
         </div>

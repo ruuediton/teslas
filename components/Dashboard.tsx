@@ -120,7 +120,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       case View.ABOUT_US:
         return <AboutUsPage onBack={() => setCurrentView(View.PROFILE)} lang={appLanguage} />;
       case View.FAQ:
-        return <FAQPage onBack={() => setCurrentView(View.PROFILE)} lang={appLanguage} />;
+        return <FAQPage onBack={() => setCurrentView(View.PROFILE)} onNavigateToSupport={() => setCurrentView(View.CUSTOMER_SERVICE)} lang={appLanguage} />;
       case View.CUSTOMER_SERVICE:
         return <CustomerServicePage onBack={() => setCurrentView(View.PROFILE)} onOpenChat={() => setCurrentView(View.CHAT)} lang={appLanguage} />;
       case View.TRANSACTION_HISTORY:
