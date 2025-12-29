@@ -23,7 +23,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
     setTimeout(() => setShowFeedback(null), 3000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.phone || !formData.password || !formData.confirmPassword || !formData.inviteCode) {
@@ -85,7 +85,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
       if (authData.user) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert([
+          .upsert([
             {
               id: authData.user.id,
               phone: formData.phone,
