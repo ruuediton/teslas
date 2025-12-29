@@ -190,16 +190,26 @@ export const RechargeFlow: React.FC<RechargeFlowProps> = ({ onBack, lang }) => {
 
     } catch (error: any) {
       console.error('Deposit error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack
+      });
 
       // Friendly error messages
       let errorMessage = 'Erro ao processar depósito.';
 
-      if (error.message?.includes('storage')) {
-        errorMessage = 'Erro ao carregar o comprovativo. Por favor, tente novamente.';
+      if (error.message?.includes('storage') || error.message?.includes('bucket')) {
+        errorMessage = 'Bucket de storage não configurado. Contate o administrador.';
       } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
         errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
       } else if (error.code === 'PGRST116') {
         errorMessage = 'Erro de autenticação. Por favor, faça login novamente.';
+      } else if (error.message) {
+        // Show actual error message for debugging
+        errorMessage = `Erro: ${error.message}`;
       }
 
       triggerFeedback('error', errorMessage);

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 import { Language } from '../types';
 import { translations } from '../translations';
 
@@ -11,6 +12,11 @@ interface Proof {
   comment?: string;
   imageUrl: string;
   status: 'verified' | 'pending';
+}
+
+interface Stats {
+  requestedToday: number;
+  paidToday: number;
 }
 
 interface SocialProofPageProps {
@@ -25,40 +31,78 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
   const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [comment, setComment] = useState('');
-
-  const [proofs, setProofs] = useState<Proof[]>([
-    {
-      id: 'P1',
-      userName: 'Mateus K.',
-      amount: '50.000 Kz',
-      date: 'Hoje, 10:45',
-      comment: 'Caiu em menos de 2 horas! Top demais.',
-      imageUrl: 'https://images.unsplash.com/photo-1554224155-1696413565d3?q=80&w=400&auto=format&fit=crop',
-      status: 'verified'
-    },
-    {
-      id: 'P2',
-      userName: 'Ana Maria L.',
-      amount: '120.000 Kz',
-      date: 'Ontem, 21:30',
-      comment: 'Segundo saque realizado com sucesso.',
-      imageUrl: 'https://images.unsplash.com/photo-1559526324-593bc073d938?q=80&w=400&auto=format&fit=crop',
-      status: 'verified'
-    },
-    {
-      id: 'P3',
-      userName: 'Domingos J.',
-      amount: '5.000 Kz',
-      date: 'Ontem, 15:10',
-      imageUrl: 'https://images.unsplash.com/photo-1554224154-22dec7ec8818?q=80&w=400&auto=format&fit=crop',
-      status: 'verified'
-    }
-  ]);
+  const [proofs, setProofs] = useState<Proof[]>([]);
+  const [stats, setStats] = useState<Stats>({ requestedToday: 0, paidToday: 0 });
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
+    loadData();
+    setupRealtime();
   }, []);
+
+  const loadData = async () => {
+    try {
+      // Load posts
+      const { data: posts, error: postsError } = await supabase
+        .from('prova_social')
+        .select('*')
+        .order('data_publicacao', { ascending: false });
+
+      if (postsError) throw postsError;
+
+      if (posts) {
+        setProofs(posts.map(p => ({
+          id: p.id,
+          userName: 'Usuário',
+          amount: '---',
+          date: new Date(p.data_publicacao).toLocaleString('pt-AO'),
+          comment: p.comentario,
+          imageUrl: p.url_imagem_1,
+          status: 'verified'
+        })));
+      }
+
+      // Load stats
+      const { data: statsData, error: statsError } = await supabase.rpc('get_daily_withdrawal_stats');
+      if (!statsError && statsData) {
+        setStats({
+          requestedToday: statsData.requested_today || 0,
+          paidToday: statsData.paid_today || 0
+        });
+      }
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const setupRealtime = () => {
+    const channel = supabase
+      .channel('prova_social_changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'prova_social'
+      }, (payload) => {
+        const newPost = payload.new;
+        setProofs(prev => [{
+          id: newPost.id,
+          userName: 'Usuário',
+          amount: '---',
+          date: new Date(newPost.data_publicacao).toLocaleString('pt-AO'),
+          comment: newPost.comentario,
+          imageUrl: newPost.url_imagem_1,
+          status: 'verified'
+        }, ...prev]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const triggerFeedback = (type: 'success' | 'error', message: string) => {
     setShowFeedback({ type, message });
@@ -71,34 +115,64 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
       triggerFeedback('error', 'Selecione uma imagem do comprovante.');
       return;
     }
 
+    if (!comment.trim()) {
+      triggerFeedback('error', 'Escreva um comentário.');
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Simulação de upload para o backend
-    setTimeout(() => {
-      setIsSubmitting(false);
-      triggerFeedback('success', t.proofSuccess);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        triggerFeedback('error', 'Usuário não autenticado.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Upload image
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('comprovativos')
+        .upload(fileName, selectedFile);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('comprovativos')
+        .getPublicUrl(fileName);
+
+      // Insert post
+      const { error: insertError } = await supabase
+        .from('prova_social')
+        .insert({
+          user_id: user.id,
+          url_imagem_1: publicUrl,
+          comentario: comment
+        });
+
+      if (insertError) throw insertError;
+
+      triggerFeedback('success', 'Publicado com sucesso!');
       setSelectedFile(null);
       setComment('');
-      
-      // Adiciona simuladamente ao feed como pendente
-      const newProof: Proof = {
-        id: 'P_TEMP_' + Date.now(),
-        userName: 'Você',
-        amount: '---',
-        date: 'Agora',
-        comment: comment,
-        imageUrl: URL.createObjectURL(selectedFile),
-        status: 'pending'
-      };
-      setProofs([newProof, ...proofs]);
-    }, 2000);
+
+    } catch (error: any) {
+      console.error('Submit error:', error);
+      triggerFeedback('error', error.message || 'Erro ao publicar.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -106,18 +180,18 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
       {/* Header */}
       <div className="bg-white dark:bg-dark h-16 flex items-center justify-between sticky top-0 z-50 border-b border-gray-100 dark:border-white/5 px-4">
         <div className="w-10">
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             className="w-10 h-10 flex items-center justify-center text-dark dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 rounded-full transition-all"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
         </div>
-        
+
         <h1 className="font-extrabold text-dark dark:text-white text-lg absolute left-1/2 -translate-x-1/2 pointer-events-none">
           {t.socialProof}
         </h1>
-        
+
         <div className="w-10"></div>
       </div>
 
@@ -130,12 +204,12 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
           <div className="bg-primary rounded-[32px] p-6 text-white shadow-xl shadow-primary/20 relative overflow-hidden">
             <div className="grid grid-cols-2 gap-6 relative z-10">
               <div className="space-y-1">
-                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{t.activeUsers}</p>
-                <h4 className="text-2xl font-black">52.480</h4>
+                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Solicitaram Hoje</p>
+                <h4 className="text-2xl font-black">{stats.requestedToday}</h4>
               </div>
               <div className="space-y-1">
-                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{t.totalPaid}</p>
-                <h4 className="text-2xl font-black">285M Kz</h4>
+                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Receberam Hoje</p>
+                <h4 className="text-2xl font-black">{stats.paidToday}</h4>
               </div>
             </div>
             <span className="material-symbols-outlined absolute -right-6 -bottom-6 text-[120px] text-white/5 rotate-12">monitoring</span>
@@ -153,7 +227,7 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
                 <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">{t.uploadImage}</label>
                 <label className="w-full h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-white/10 rounded-2xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-all overflow-hidden relative">
                   {selectedFile ? (
-                    <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover opacity-60" />
+                    <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-contain bg-gray-100 dark:bg-gray-900" />
                   ) : (
                     <div className="flex flex-col items-center">
                       <span className="material-symbols-outlined text-gray-300 dark:text-gray-600 text-3xl">add_a_photo</span>
@@ -166,7 +240,7 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
 
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">{t.commentLabel}</label>
-                <input 
+                <input
                   type="text"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
@@ -175,7 +249,7 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
                 />
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={isSubmitting || !selectedFile}
                 className="w-full bg-dark dark:bg-primary text-white py-4 rounded-xl font-black text-xs shadow-lg active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
@@ -196,31 +270,30 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
           <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] pl-2">
             {t.publicFeed}
           </h3>
-          
+
           <div className="grid grid-cols-1 gap-4">
             {isLoading ? (
-               Array.from({ length: 3 }).map((_, i) => (
+              Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="bg-white dark:bg-dark-card p-5 rounded-[28px] border border-gray-100 dark:border-white/5 animate-pulse h-48"></div>
               ))
             ) : (
               proofs.map((p) => (
                 <div key={p.id} className="bg-white dark:bg-dark-card rounded-[32px] border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden flex flex-col group">
-                  <div className="relative h-48 bg-gray-100 dark:bg-dark/50 overflow-hidden">
-                    <img src={p.imageUrl} alt="Proof" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="relative h-48 bg-gray-100 dark:bg-dark/50 overflow-hidden cursor-pointer" onClick={() => setFullscreenImage(p.imageUrl)}>
+                    <img src={p.imageUrl} alt="Proof" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                     <div className="absolute bottom-4 left-6 right-6 flex justify-between items-end">
                       <div>
-                         <p className="text-[10px] font-black text-white/70 uppercase tracking-widest">{p.date}</p>
-                         <h4 className="text-white font-black text-lg">{p.userName}</h4>
+                        <p className="text-[10px] font-black text-white/70 uppercase tracking-widest">{p.date}</p>
+                        <h4 className="text-white font-black text-lg">{p.userName}</h4>
                       </div>
                       <div className="bg-white/20 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full">
                         <p className="text-white font-black text-sm">{p.amount}</p>
                       </div>
                     </div>
                     <div className="absolute top-4 right-4">
-                      <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase flex items-center gap-1 ${
-                        p.status === 'verified' ? 'bg-green-500 text-white' : 'bg-orange-500 text-white'
-                      }`}>
+                      <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase flex items-center gap-1 ${p.status === 'verified' ? 'bg-green-500 text-white' : 'bg-orange-500 text-white'
+                        }`}>
                         <span className="material-symbols-outlined text-[12px]">{p.status === 'verified' ? 'verified' : 'pending'}</span>
                         {p.status === 'verified' ? t.verifiedStatus : t.pendingStatus}
                       </span>
@@ -241,9 +314,8 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
       {/* Global Toast Feedback */}
       {showFeedback && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <div className={`px-8 py-3 rounded-full shadow-2xl flex items-center gap-3 border border-white/10 dark:border-dark/10 ${
-            showFeedback.type === 'success' ? 'bg-dark dark:bg-white text-white dark:text-dark' : 'bg-red-500 text-white'
-          }`}>
+          <div className={`px-8 py-3 rounded-full shadow-2xl flex items-center gap-3 border border-white/10 dark:border-dark/10 ${showFeedback.type === 'success' ? 'bg-dark dark:bg-white text-white dark:text-dark' : 'bg-red-500 text-white'
+            }`}>
             <span className="material-symbols-outlined text-green-500 text-sm">{showFeedback.type === 'success' ? 'check_circle' : 'error'}</span>
             <p className="text-xs font-bold whitespace-nowrap">{showFeedback.message}</p>
           </div>
