@@ -26,28 +26,71 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lan
 
   React.useEffect(() => {
     fetchProfile();
+
+    // Configurar Realtime
+    const channel = supabase
+      .channel('profile_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchProfile())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'depositos_clientes' }, () => fetchProfile())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'retirada_clientes' }, () => fetchProfile())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas_diarias' }, () => fetchProfile())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // 1. Fetch Profile (Balance & Recharge)
+      const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (data) {
+      // 2. Fetch Total Approved Deposits
+      const { data: deposits } = await supabase
+        .from('depositos_clientes')
+        .select('valor_deposito')
+        .eq('user_id', user.id)
+        .eq('estado_de_pagamento', 'recarregado');
+
+      const totalDep = deposits?.reduce((acc, curr) => acc + Number(curr.valor_deposito), 0) || 0;
+
+      // 3. Fetch Total Withdrawals
+      const { data: withdrawals } = await supabase
+        .from('retirada_clientes')
+        .select('valor_solicitado')
+        .eq('user_id', user.id);
+
+      const totalWith = withdrawals?.reduce((acc, curr) => acc + Number(curr.valor_solicitado), 0) || 0;
+
+      // 4. Fetch Total Daily Income (from tasks history)
+      const { data: incomeTasks } = await supabase
+        .from('tarefas_diarias')
+        .select('valor_renda')
+        .eq('user_id', user.id);
+
+      const totalInc = incomeTasks?.reduce((acc, curr) => acc + Number(curr.valor_renda), 0) || 0;
+
+      if (profile) {
         setUserData({
-          phone: data.phone || user.email || "User",
-          id: `DB-${data.id.substring(0, 5).toUpperCase()}`,
-          balance: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(data.balance || 0),
-          totalRecharge: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(data.reloaded_amount || 0),
-          totalDeposit: "0,00", // Not in schema provided
-          totalIncome: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(data.income || 0),
-          totalWithdrawal: "0,00", // Not in schema provided
+          phone: profile.phone || user.email || "User",
+          id: `DB-${profile.id.substring(0, 5).toUpperCase()}`,
+          balance: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(profile.balance || 0),
+          totalRecharge: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(profile.reloaded_amount || 0),
+          totalDeposit: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(totalDep),
+          totalIncome: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(totalInc),
+          totalWithdrawal: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(totalWith),
         });
       }
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
     }
   };
 
