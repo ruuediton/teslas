@@ -32,7 +32,7 @@ export const WithdrawalPage: React.FC<WithdrawalPageProps> = ({
   lang
 }) => {
   const t = translations[lang];
-  const t = translations[lang];
+
   const [userBalance, setUserBalance] = useState(0);
   const [userBankAccounts, setUserBankAccounts] = useState<any[]>([]);
   const [history, setHistory] = useState<WithdrawalRecord[]>([]);
@@ -172,7 +172,7 @@ export const WithdrawalPage: React.FC<WithdrawalPageProps> = ({
                   <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold">{item.timestamp}</p>
                 </div>
                 <span className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full ${item.status === 'Aprovado' ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' :
-                    'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
+                  'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
                   }`}>
                   {item.status}
                 </span>
@@ -205,7 +205,8 @@ export const WithdrawalPage: React.FC<WithdrawalPageProps> = ({
               </div>
             </div>
           );
-        })}
+        })
+      )}
     </div>
   );
 
@@ -308,63 +309,61 @@ export const WithdrawalPage: React.FC<WithdrawalPageProps> = ({
           </div>
         </div>
       )}
-    </div>
-  )
-}
 
-{/* Insufficient Funds Modal */ }
-{
-  showInsufficientFundsModal && (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center px-6">
-      <div className="absolute inset-0 bg-dark/70 backdrop-blur-sm" onClick={() => setShowInsufficientFundsModal(false)}></div>
-      <div className="relative bg-white dark:bg-dark-card w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 p-8 text-center space-y-6">
-        <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto">
-          <span className="material-symbols-outlined text-red-500 text-4xl">account_balance_wallet</span>
-        </div>
-        <div>
-          <h3 className="text-xl font-black text-dark dark:text-white mb-2">Saldo Insuficiente</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-            Por favor, recarregue sua conta e compre produtos para, assim, no futuro, poder retirar.
-          </p>
-        </div>
-        <button
-          onClick={() => { setShowInsufficientFundsModal(false); onRedirectDeposit(); }}
-          className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-xl hover:bg-primary-dark transition-all"
-        >
-          Recarregar Agora
-        </button>
-        <button onClick={() => setShowInsufficientFundsModal(false)} className="text-gray-400 text-sm font-bold">Cancelar</button>
-      </div>
-    </div>
-  )
-}
 
-{/* Add Bank Modal */ }
-{
-  showAddBankModal && (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center px-6">
-      <div className="absolute inset-0 bg-dark/70 backdrop-blur-sm" onClick={() => setShowAddBankModal(false)}></div>
-      <div className="relative bg-white dark:bg-dark-card w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 p-8 text-center space-y-6">
-        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-          <span className="material-symbols-outlined text-primary text-4xl">account_balance</span>
-        </div>
-        <div>
-          <h3 className="text-xl font-black text-dark dark:text-white mb-2">Conta Necessária</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-            Por favor, adicione uma conta bancária para continuar.
-          </p>
-        </div>
-        <button
-          onClick={() => { setShowAddBankModal(false); onRedirectAddBank(); }}
-          className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-xl hover:bg-primary-dark transition-all"
-        >
-          Adicionar Banco
-        </button>
-        <button onClick={() => setShowAddBankModal(false)} className="text-gray-400 text-sm font-bold">Cancelar</button>
-      </div>
-    </div>
-  )
-}
+      {/* Insufficient Funds Modal */}
+      {
+        showInsufficientFundsModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center px-6">
+            <div className="absolute inset-0 bg-dark/70 backdrop-blur-sm" onClick={() => setShowInsufficientFundsModal(false)}></div>
+            <div className="relative bg-white dark:bg-dark-card w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 p-8 text-center space-y-6">
+              <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-red-500 text-4xl">account_balance_wallet</span>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-dark dark:text-white mb-2">Saldo Insuficiente</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                  Por favor, recarregue sua conta e compre produtos para, assim, no futuro, poder retirar.
+                </p>
+              </div>
+              <button
+                onClick={() => { setShowInsufficientFundsModal(false); onRedirectDeposit(); }}
+                className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-xl hover:bg-primary-dark transition-all"
+              >
+                Recarregar Agora
+              </button>
+              <button onClick={() => setShowInsufficientFundsModal(false)} className="text-gray-400 text-sm font-bold">Cancelar</button>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Add Bank Modal */}
+      {
+        showAddBankModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center px-6">
+            <div className="absolute inset-0 bg-dark/70 backdrop-blur-sm" onClick={() => setShowAddBankModal(false)}></div>
+            <div className="relative bg-white dark:bg-dark-card w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 p-8 text-center space-y-6">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-primary text-4xl">account_balance</span>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-dark dark:text-white mb-2">Conta Necessária</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                  Por favor, adicione uma conta bancária para continuar.
+                </p>
+              </div>
+              <button
+                onClick={() => { setShowAddBankModal(false); onRedirectAddBank(); }}
+                className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-xl hover:bg-primary-dark transition-all"
+              >
+                Adicionar Banco
+              </button>
+              <button onClick={() => setShowAddBankModal(false)} className="text-gray-400 text-sm font-bold">Cancelar</button>
+            </div>
+          </div>
+        )
+      }
 
     </div >
   );

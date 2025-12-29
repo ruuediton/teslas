@@ -34,12 +34,12 @@ interface DashboardProps {
   setAppTheme: (theme: Theme) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ 
-  onLogout, 
-  appLanguage, 
-  appTheme, 
-  setAppLanguage, 
-  setAppTheme 
+export const Dashboard: React.FC<DashboardProps> = ({
+  onLogout,
+  appLanguage,
+  appTheme,
+  setAppLanguage,
+  setAppTheme
 }) => {
   const [currentView, setCurrentView] = useState<View>(View.HOME);
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -61,12 +61,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }, [currentView, carouselImages.length]);
 
   const mainViews = [
-    View.HOME, 
-    View.PRODUCTS, 
-    View.INVITATION, 
-    View.PROFILE, 
-    View.TRANSACTION_HISTORY, 
-    View.GIFT, 
+    View.HOME,
+    View.PRODUCTS,
+    View.INVITATION,
+    View.PROFILE,
+    View.TRANSACTION_HISTORY,
+    View.GIFT,
     View.TASKS,
     View.SOCIAL_PROOF
   ];
@@ -97,12 +97,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       case View.ADD_BANK:
         return <AddBankPage onBack={() => setCurrentView(View.PROFILE)} lang={appLanguage} />;
       case View.CHANGE_PASSWORD:
-        return <ChangePasswordPage onBack={() => setCurrentView(View.PROFILE)} lang={appLanguage} />;
+        return <ChangePasswordPage onBack={() => setCurrentView(View.PROFILE)} onLogout={onLogout} lang={appLanguage} />;
       case View.RECHARGE:
         return <RechargeFlow onBack={() => setCurrentView(View.HOME)} lang={appLanguage} />;
       case View.WITHDRAWAL:
-        return <WithdrawalPage 
-          onBack={() => setCurrentView(View.HOME)} 
+        return <WithdrawalPage
+          onBack={() => setCurrentView(View.HOME)}
           onRedirectDeposit={() => setCurrentView(View.RECHARGE)}
           onRedirectAddBank={() => setCurrentView(View.ADD_BANK)}
           lang={appLanguage}
@@ -126,9 +126,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
       case View.TRANSACTION_HISTORY:
         return <TransactionHistoryPage onBack={() => setCurrentView(View.PROFILE)} lang={appLanguage} />;
       case View.SETTINGS:
-        return <SettingsPage 
-          onBack={() => setCurrentView(View.PROFILE)} 
-          setView={setCurrentView} 
+        return <SettingsPage
+          onBack={() => setCurrentView(View.PROFILE)}
+          setView={setCurrentView}
           currentLanguage={appLanguage}
           currentTheme={appTheme}
           setLanguage={setAppLanguage}
@@ -147,45 +147,45 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex flex-col min-h-full pb-24 animate-in fade-in duration-500">
             {/* 1. Carrossel de Imagens */}
             <div className="relative w-full h-64 overflow-hidden rounded-b-[40px] shadow-2xl">
-               <div className="absolute inset-0 flex transition-transform duration-1000 ease-out" style={{ transform: `translateX(-${carouselIndex * 100}%)` }}>
-                 {carouselImages.map((img, i) => (
-                    <div key={i} className="min-w-full h-full relative">
-                      <img src={img.url} alt={img.title} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-transparent to-transparent"></div>
-                      <div className="absolute bottom-10 left-8 text-white">
-                        <h2 className="text-2xl font-black mb-2">{img.title}</h2>
-                        <div className="flex gap-2">
-                           {carouselImages.map((_, dotI) => (
-                             <div key={dotI} className={`h-1.5 rounded-full transition-all ${dotI === carouselIndex ? 'w-8 bg-primary' : 'w-1.5 bg-white/40'}`}></div>
-                           ))}
-                        </div>
+              <div className="absolute inset-0 flex transition-transform duration-1000 ease-out" style={{ transform: `translateX(-${carouselIndex * 100}%)` }}>
+                {carouselImages.map((img, i) => (
+                  <div key={i} className="min-w-full h-full relative">
+                    <img src={img.url} alt={img.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-transparent to-transparent"></div>
+                    <div className="absolute bottom-10 left-8 text-white">
+                      <h2 className="text-2xl font-black mb-2">{img.title}</h2>
+                      <div className="flex gap-2">
+                        {carouselImages.map((_, dotI) => (
+                          <div key={dotI} className={`h-1.5 rounded-full transition-all ${dotI === carouselIndex ? 'w-8 bg-primary' : 'w-1.5 bg-white/40'}`}></div>
+                        ))}
                       </div>
                     </div>
-                 ))}
-               </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* 2. Barra de Notificações */}
             <div className="mx-6 -mt-6 bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 py-3 px-5 flex items-center gap-4 rounded-3xl shadow-xl z-10">
-               <span className="material-symbols-outlined text-primary text-2xl">volume_up</span>
-               <div className="flex-1 overflow-hidden">
-                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap animate-[marquee_25s_linear_infinite]">
-                    {t.scrollingNews}
-                  </p>
-               </div>
+              <span className="material-symbols-outlined text-primary text-2xl">volume_up</span>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap animate-[marquee_25s_linear_infinite]">
+                  {t.scrollingNews}
+                </p>
+              </div>
             </div>
 
             {/* 3. Área de Botões Principais */}
             <div className="p-6">
               <div className="grid grid-cols-3 gap-y-10 gap-x-2">
                 {quickButtons.map((btn, idx) => (
-                  <button 
+                  <button
                     key={idx}
                     onClick={() => setCurrentView(btn.id)}
                     className="flex flex-col items-center gap-3 active:scale-90 transition-all group"
                   >
                     <div className={`w-16 h-16 ${btn.color} rounded-[24px] flex items-center justify-center shadow-lg group-hover:scale-110 transition-all`}>
-                       <span className="material-symbols-outlined text-3xl font-light">{btn.icon}</span>
+                      <span className="material-symbols-outlined text-3xl font-light">{btn.icon}</span>
                     </div>
                     <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 text-center leading-tight uppercase tracking-tighter">
                       {btn.label}
@@ -202,28 +202,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 {t.instTitle}
               </h3>
               <div className="bg-white dark:bg-dark-card rounded-[40px] border border-gray-100 dark:border-white/5 shadow-2xl overflow-hidden group">
-                 <div className="relative h-56 overflow-hidden">
-                   <img src="https://images.unsplash.com/photo-1449156001935-d28605224917?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent"></div>
-                   <div className="absolute bottom-6 left-8">
-                      <h4 className="text-white font-black text-xl">{t.instSubtitle}</h4>
-                   </div>
-                 </div>
-                 <div className="p-8 space-y-6">
-                   <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed text-justify">
-                     {t.instDescription}
-                   </p>
-                   <button 
+                <div className="relative h-56 overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1449156001935-d28605224917?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-6 left-8">
+                    <h4 className="text-white font-black text-xl">{t.instSubtitle}</h4>
+                  </div>
+                </div>
+                <div className="p-8 space-y-6">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed text-justify">
+                    {t.instDescription}
+                  </p>
+                  <button
                     onClick={() => setCurrentView(View.COMPANY_INTRO)}
                     className="w-full py-5 bg-primary/5 dark:bg-white/5 text-primary dark:text-white font-black rounded-2xl border border-primary/10 dark:border-white/10 flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all"
-                   >
-                     {t.learnMore}
-                     <span className="material-symbols-outlined">arrow_right_alt</span>
-                   </button>
-                 </div>
+                  >
+                    {t.learnMore}
+                    <span className="material-symbols-outlined">arrow_right_alt</span>
+                  </button>
+                </div>
               </div>
             </div>
-            
+
             <style>{`
               @keyframes marquee {
                 0% { transform: translateX(100%); }
