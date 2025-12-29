@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 
 interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  timestamp: string;
-  type: 'deposit' | 'security' | 'promo' | 'system';
-  read: boolean;
+  id_notificacao: string;
+  user_id: string;
+  tipo_notificacao: string;
+  mensagem: string;
+  data_evento: string;
+  origem_dados: string;
 }
 
 interface NotificationsPageProps {
@@ -20,62 +21,57 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({ onBack }) 
   const [showFeedback, setShowFeedback] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulação de carregamento de dados do backend
-    const timer = setTimeout(() => {
-      const mockData: NotificationItem[] = [
-        {
-          id: '1',
-          title: 'Depósito Confirmado',
-          message: 'Seu depósito de 50.000 Kz foi processado com sucesso e já está disponível em seu saldo.',
-          timestamp: 'Há 5 minutos',
-          type: 'deposit',
-          read: false
-        },
-        {
-          id: '2',
-          title: 'Novo Dispositivo Detectado',
-          message: 'Um novo acesso foi realizado em sua conta. Se não foi você, altere sua senha imediatamente.',
-          timestamp: 'Hoje, 09:12',
-          type: 'security',
-          read: false
-        },
-        {
-          id: '3',
-          title: 'Promoção de Verão',
-          message: 'Ganhe 20% de bônus na compra de qualquer Fundo Diamante durante este fim de semana.',
-          timestamp: 'Ontem, 18:45',
-          type: 'promo',
-          read: true
-        },
-        {
-          id: '4',
-          title: 'Atualização do Sistema',
-          message: 'Realizamos melhorias na estabilidade do chat IA para uma experiência mais fluida.',
-          timestamp: '25 Out, 10:00',
-          type: 'system',
-          read: true
-        }
-      ];
-      setNotifications(mockData);
-      setIsLoading(false);
-    }, 1200);
-
-    return () => clearTimeout(timer);
+    loadNotifications();
   }, []);
 
+  const loadNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notificacoes_usuario')
+        .select('*')
+        .order('data_evento', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        setNotifications(data);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      setIsLoading(false);
+    }
+  };
+
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    setShowFeedback('Todas as notificações marcadas como lidas.');
+    setShowFeedback('Funcionalidade em desenvolvimento.');
     setTimeout(() => setShowFeedback(null), 3000);
   };
 
-  const getIcon = (type: NotificationItem['type']) => {
+  const getIcon = (type: string) => {
     switch (type) {
-      case 'deposit': return { name: 'account_balance_wallet', color: 'bg-green-100 text-green-600' };
-      case 'security': return { name: 'shield_lock', color: 'bg-red-100 text-red-600' };
-      case 'promo': return { name: 'sell', color: 'bg-accent/10 text-accent' };
-      default: return { name: 'notifications', color: 'bg-blue-100 text-blue-600' };
+      case 'deposito': return { name: 'account_balance_wallet', color: 'bg-green-100 text-green-600' };
+      case 'saque': return { name: 'payments', color: 'bg-blue-100 text-blue-600' };
+      case 'bonus': return { name: 'redeem', color: 'bg-accent/10 text-accent' };
+      case 'compra': return { name: 'shopping_bag', color: 'bg-purple-100 text-purple-600' };
+      case 'conta_bancaria': return { name: 'account_balance', color: 'bg-indigo-100 text-indigo-600' };
+      default: return { name: 'notifications', color: 'bg-gray-100 text-gray-600' };
     }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Agora mesmo';
+    if (diffMins < 60) return `Há ${diffMins} minuto${diffMins > 1 ? 's' : ''}`;
+    if (diffHours < 24) return `Há ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+    if (diffDays < 7) return `Há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+    return date.toLocaleDateString('pt-AO');
   };
 
   return (
@@ -83,19 +79,19 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({ onBack }) 
       {/* Header */}
       <div className="bg-white h-16 flex items-center justify-between sticky top-0 z-50 border-b border-gray-100 px-4">
         <div className="w-10">
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             className="w-10 h-10 flex items-center justify-center text-dark hover:bg-gray-50 rounded-full transition-all"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
         </div>
-        
+
         <h1 className="font-extrabold text-dark text-lg">Notificações</h1>
-        
+
         <div className="w-10 flex justify-end">
           {notifications.length > 0 && (
-            <button 
+            <button
               onClick={markAllAsRead}
               className="text-primary hover:text-primary-dark transition-colors"
               title="Marcar todas como lidas"
@@ -121,29 +117,22 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({ onBack }) 
           ))
         ) : notifications.length > 0 ? (
           notifications.map((n) => {
-            const icon = getIcon(n.type);
+            const icon = getIcon(n.tipo_notificacao);
             return (
-              <div 
-                key={n.id} 
-                className={`bg-white p-5 rounded-2xl border transition-all shadow-sm flex gap-4 relative group ${
-                  n.read ? 'border-gray-100 opacity-75' : 'border-primary/20 bg-primary/5'
-                }`}
+              <div
+                key={n.id_notificacao}
+                className="bg-white p-5 rounded-2xl border border-gray-100 transition-all shadow-sm flex gap-4"
               >
-                {!n.read && <div className="absolute top-5 right-5 w-2 h-2 bg-primary rounded-full"></div>}
-                
                 <div className={`w-12 h-12 ${icon.color} rounded-xl flex items-center justify-center shrink-0`}>
                   <span className="material-symbols-outlined">{icon.name}</span>
                 </div>
 
                 <div className="flex-1">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className={`text-sm font-extrabold ${n.read ? 'text-dark/80' : 'text-dark'}`}>{n.title}</h3>
-                  </div>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-2 line-clamp-2">
-                    {n.message}
+                  <p className="text-xs text-dark leading-relaxed mb-2">
+                    {n.mensagem}
                   </p>
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
-                    {n.timestamp}
+                    {formatTimeAgo(n.data_evento)}
                   </span>
                 </div>
               </div>
