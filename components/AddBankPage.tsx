@@ -91,7 +91,11 @@ export const AddBankPage: React.FC<AddBankPageProps> = ({ onBack }) => {
 
     } catch (error: any) {
       console.error('Error saving bank account:', error);
-      triggerFeedback('error', 'Erro ao salvar conta bancária.');
+      if (error.code === '23505') { // Postgres unique_violation code
+        triggerFeedback('error', 'Conta bancária activa');
+      } else {
+        triggerFeedback('error', 'Erro ao salvar conta bancária.');
+      }
     } finally {
       setIsSaving(false);
     }
