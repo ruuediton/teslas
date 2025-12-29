@@ -46,3 +46,14 @@ export interface Product {
   imageUrl?: string;
   emoji: string;
 }
+
+export interface UserProfile {
+  id: string;
+  phone: string;
+  invite_code?: string;
+  balance: number;
+  reloaded_amount: number;
+  income: number;
+  state?: string;
+  created_at?: string;
+}

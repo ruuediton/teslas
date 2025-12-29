@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
 import { LoginScreen } from './components/LoginScreen';
 import { Dashboard } from './components/Dashboard';
 import { RegisterScreen } from './components/RegisterScreen';
@@ -8,7 +9,23 @@ import { Language, Theme } from './types';
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  
+
+  useEffect(() => {
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Persisted settings
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem('db_lang') as Language) || 'pt';
@@ -37,16 +54,17 @@ const App: React.FC = () => {
     setIsLoggedIn(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setIsLoggedIn(false);
     setShowRegister(false);
   };
 
   if (isLoggedIn) {
     return (
-      <Dashboard 
-        onLogout={handleLogout} 
-        appLanguage={language} 
+      <Dashboard
+        onLogout={handleLogout}
+        appLanguage={language}
         appTheme={theme}
         setAppLanguage={setLanguage}
         setAppTheme={setTheme}
@@ -59,9 +77,9 @@ const App: React.FC = () => {
       {showRegister ? (
         <RegisterScreen onBackToLogin={() => setShowRegister(false)} />
       ) : (
-        <LoginScreen 
-          onLogin={handleLogin} 
-          onGoToRegister={() => setShowRegister(true)} 
+        <LoginScreen
+          onLogin={handleLogin}
+          onGoToRegister={() => setShowRegister(true)}
         />
       )}
     </div>
