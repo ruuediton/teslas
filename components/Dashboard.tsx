@@ -24,6 +24,7 @@ import { UserProfileDetailPage } from './UserProfileDetailPage';
 import { GiftPage } from './GiftPage';
 import { TasksPage } from './TasksPage';
 import { SocialProofPage } from './SocialProofPage';
+import { WelcomePopup } from './WelcomePopup';
 import { translations } from '../translations';
 
 interface DashboardProps {
@@ -43,6 +44,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [currentView, setCurrentView] = useState<View>(View.HOME);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    // Show welcome popup only on initial home view
+    const hasShown = sessionStorage.getItem('welcome_popup_shown');
+    if (currentView === View.HOME && !hasShown) {
+      setShowWelcome(true);
+    }
+  }, [currentView]);
   const t = translations[appLanguage];
 
   const carouselImages = [
@@ -241,6 +251,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {renderContent()}
       </main>
       {showBottomNav && <BottomNav currentView={currentView} setView={setCurrentView} lang={appLanguage} />}
+
+      {showWelcome && (
+        <WelcomePopup
+          onClose={() => setShowWelcome(false)}
+          onNavigate={(view) => setCurrentView(view)}
+        />
+      )}
     </div>
   );
 };
