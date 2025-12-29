@@ -2,74 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Product, Language, View } from '../types';
 import { translations } from '../translations';
+import { supabase } from '../supabaseClient';
 
 interface ProductListPageProps {
   lang: Language;
   onNavigateToPurchased: () => void;
 }
-
-const MOCK_PRODUCTS: Product[] = [
-  { 
-    id: '1', 
-    name: 'Fundo Safira', 
-    price: 50000, 
-    dailyIncome: 250, 
-    duration: 180, 
-    purchaseLimit: 1, 
-    emoji: '💎',
-    description: 'O Fundo Safira é um investimento de baixo risco focado em preservação de capital com rendimentos constantes acima da inflação.'
-  },
-  { 
-    id: '2', 
-    name: 'Fundo Rubi', 
-    price: 150000, 
-    dailyIncome: 900, 
-    duration: 360, 
-    purchaseLimit: 2, 
-    emoji: '🍷',
-    description: 'Focado em crescimento moderado, o Fundo Rubi utiliza IA para diversificar em mercados emergentes com alta liquidez.'
-  },
-  { 
-    id: '3', 
-    name: 'Fundo Esmeralda', 
-    price: 500000, 
-    dailyIncome: 3500, 
-    duration: 360, 
-    purchaseLimit: 1, 
-    emoji: '💚',
-    description: 'Um fundo de alto desempenho para investidores que buscam maximizar retornos diários através de ativos estruturados de luxo.'
-  },
-  { 
-    id: '4', 
-    name: 'Fundo Diamante', 
-    price: 1000000, 
-    dailyIncome: 8000, 
-    duration: 720, 
-    purchaseLimit: 1, 
-    emoji: '💍',
-    description: 'Nosso produto mais exclusivo. O Fundo Diamante oferece o maior teto de rendimento da plataforma com seguro total de capital.'
-  },
-  { 
-    id: '5', 
-    name: 'Pacote Starter', 
-    price: 5000, 
-    dailyIncome: 25, 
-    duration: 30, 
-    purchaseLimit: 10, 
-    emoji: '⚡',
-    description: 'Ideal para quem está começando. Experimente a plataforma com um investimento acessível e retorno diário imediato.'
-  },
-  { 
-    id: '6', 
-    name: 'Investimento Ouro', 
-    price: 25000, 
-    dailyIncome: 120, 
-    duration: 90, 
-    purchaseLimit: 5, 
-    emoji: '🏆',
-    description: 'Equilíbrio perfeito entre tempo de contrato e rentabilidade diária para diversificação de carteira.'
-  },
-];
 
 export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNavigateToPurchased }) => {
   const t = translations[lang];
@@ -79,22 +17,73 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
   const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setProducts(MOCK_PRODUCTS);
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    fetchProducts();
   }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('status', 'active')
+        .order('price', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        const mappedProducts: Product[] = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: Number(item.price),
+          dailyIncome: Number(item.daily_income),
+          duration: item.duration_days,
+          purchaseLimit: item.purchase_limit,
+          emoji: item.emoji || '📦',
+          description: item.description || '',
+          imageUrl: item.image_url
+        }));
+        setProducts(mappedProducts);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      triggerFeedback('error', 'Erro ao carregar produtos.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const triggerFeedback = (type: 'success' | 'error', message: string) => {
     setShowFeedback({ type, message });
     setTimeout(() => setShowFeedback(null), 3000);
   };
 
-  const handleConfirmPurchase = () => {
-    if (selectedProduct) {
-      triggerFeedback('success', lang === 'pt' ? `Compra de ${selectedProduct.name} realizada com sucesso!` : `Purchase of ${selectedProduct.name} successful!`);
-      setSelectedProduct(null);
+  const handleConfirmPurchase = async () => {
+    if (!selectedProduct) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        triggerFeedback('error', 'Usuário não autenticado.');
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('purchase_product', {
+        p_product_id: selectedProduct.id,
+        p_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        triggerFeedback('success', lang === 'pt' ? data.message : 'Purchase successful!');
+        setSelectedProduct(null);
+        // Optionally refresh user balance context if available, or just page state
+      } else {
+        triggerFeedback('error', data.message || 'Erro ao realizar compra.');
+      }
+    } catch (error: any) {
+      console.error('Purchase error:', error);
+      triggerFeedback('error', error.message || 'Erro de conexão.');
     }
   };
 
@@ -107,13 +96,13 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
       {/* Header Atualizado */}
       <div className="bg-white dark:bg-dark h-16 flex items-center justify-between sticky top-0 z-50 border-b border-gray-100 dark:border-white/5 px-4">
         <div className="flex items-center gap-2">
-           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-             <span className="material-symbols-outlined text-primary text-xl">inventory_2</span>
-           </div>
-           <h1 className="text-lg font-black text-dark dark:text-white">{t.packageTitle}</h1>
+          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+            <span className="material-symbols-outlined text-primary text-xl">inventory_2</span>
+          </div>
+          <h1 className="text-lg font-black text-dark dark:text-white">{t.packageTitle}</h1>
         </div>
-        
-        <button 
+
+        <button
           onClick={onNavigateToPurchased}
           className="w-10 h-10 flex items-center justify-center text-primary hover:bg-primary/5 dark:hover:bg-primary/10 rounded-full transition-all active:scale-90"
         >
@@ -137,16 +126,16 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
         ) : (
           <div className="grid grid-cols-1 gap-4 animate-in fade-in duration-500">
             {products.map((product) => (
-              <div 
+              <div
                 key={product.id}
                 className="bg-white dark:bg-dark-card rounded-[28px] border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm flex flex-col transition-all active:scale-[0.99]"
               >
                 {/* Visual Top */}
                 <div className="h-32 bg-gray-50 dark:bg-black/20 flex items-center justify-center text-5xl border-b border-gray-50 dark:border-white/5 relative">
-                   <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none">
-                     <span className="material-symbols-outlined text-9xl">{product.emoji === '💎' ? 'diamond' : 'payments'}</span>
-                   </div>
-                   <span className="relative z-10">{product.emoji}</span>
+                  <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none">
+                    <span className="material-symbols-outlined text-9xl">{product.emoji === '💎' ? 'diamond' : 'payments'}</span>
+                  </div>
+                  <span className="relative z-10">{product.emoji}</span>
                 </div>
 
                 {/* Content Body */}
@@ -157,7 +146,7 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-0.5">{product.duration} {lang === 'pt' ? 'dias' : 'days'}</p>
                     </div>
                     <div className="text-right">
-                       <p className="text-xl font-black text-primary">{formatKz(product.price)}</p>
+                      <p className="text-xl font-black text-primary">{formatKz(product.price)}</p>
                     </div>
                   </div>
 
@@ -172,7 +161,7 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
                     </div>
                   </div>
 
-                  <button 
+                  <button
                     onClick={() => setSelectedProduct(product)}
                     className="w-full bg-primary text-white text-sm font-black py-4 rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center justify-center gap-2"
                   >
@@ -189,8 +178,8 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
       {/* Confirmation Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center px-6">
-          <div 
-            className="absolute inset-0 bg-dark/60 backdrop-blur-sm animate-in fade-in duration-300" 
+          <div
+            className="absolute inset-0 bg-dark/60 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => setSelectedProduct(null)}
           ></div>
           <div className="relative bg-white dark:bg-dark-card w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 border border-white/5">
@@ -198,7 +187,7 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
               <div className="w-20 h-20 bg-primary/10 rounded-[28px] flex items-center justify-center mx-auto mb-2">
                 <span className="material-symbols-outlined text-primary text-4xl">shopping_basket</span>
               </div>
-              
+
               <div className="space-y-1">
                 <h3 className="text-xl font-black text-dark dark:text-white">{lang === 'pt' ? 'Confirmar Investimento' : 'Confirm Investment'}</h3>
                 <p className="text-sm font-bold text-primary">{selectedProduct.name}</p>
@@ -222,13 +211,13 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
               </div>
 
               <div className="flex flex-col gap-3 pt-2">
-                <button 
+                <button
                   onClick={handleConfirmPurchase}
                   className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary-dark transition-all active:scale-95"
                 >
                   {lang === 'pt' ? 'Confirmar Compra' : 'Confirm Purchase'}
                 </button>
-                <button 
+                <button
                   onClick={() => setSelectedProduct(null)}
                   className="w-full bg-white dark:bg-white/5 text-gray-400 font-bold py-4 rounded-2xl border border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/10 transition-all"
                 >
@@ -243,21 +232,17 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
       {/* Centered Feedback Notification */}
       {showFeedback && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-8 pointer-events-none">
-          <div className={`p-6 rounded-[32px] shadow-2xl flex flex-col items-center gap-3 animate-in zoom-in-90 fade-in duration-300 max-w-[280px] text-center pointer-events-auto bg-white dark:bg-dark-card border-2 ${
-            showFeedback.type === 'success' ? 'border-green-500' : 'border-red-500'
-          }`}>
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-1 ${
-               showFeedback.type === 'success' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
+          <div className={`p-6 rounded-[32px] shadow-2xl flex flex-col items-center gap-3 animate-in zoom-in-90 fade-in duration-300 max-w-[280px] text-center pointer-events-auto bg-white dark:bg-dark-card border-2 ${showFeedback.type === 'success' ? 'border-green-500' : 'border-red-500'
             }`}>
-              <span className={`material-symbols-outlined text-4xl ${
-                showFeedback.type === 'success' ? 'text-green-500' : 'text-red-500'
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-1 ${showFeedback.type === 'success' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
               }`}>
+              <span className={`material-symbols-outlined text-4xl ${showFeedback.type === 'success' ? 'text-green-500' : 'text-red-500'
+                }`}>
                 {showFeedback.type === 'success' ? 'check_circle' : 'error'}
               </span>
             </div>
-            <p className={`text-base font-extrabold ${
-               showFeedback.type === 'success' ? 'text-green-600' : 'text-red-600'
-            }`}>
+            <p className={`text-base font-extrabold ${showFeedback.type === 'success' ? 'text-green-600' : 'text-red-600'
+              }`}>
               {showFeedback.type === 'success' ? t.success : t.error}
             </p>
             <p className="text-sm font-bold text-dark/70 dark:text-white/70 leading-relaxed">

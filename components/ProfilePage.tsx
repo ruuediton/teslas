@@ -2,6 +2,8 @@
 import React from 'react';
 import { View, Language } from '../types';
 import { translations } from '../translations';
+import { supabase } from '../supabaseClient';
+import { UserProfile } from '../types';
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -11,15 +13,42 @@ interface ProfilePageProps {
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lang }) => {
   const t = translations[lang];
-  
-  const userData = {
-    phone: "+244 923 000 000",
-    id: "DB-77721",
-    balance: "45.230,80",
-    totalRecharge: "10.000,00",
-    totalDeposit: "5.200,00",
-    totalIncome: "1.240,00",
-    totalWithdrawal: "2.500,00",
+
+  const [userData, setUserData] = React.useState<UserProfile | any>({
+    phone: "...",
+    id: "...",
+    balance: "0,00",
+    totalRecharge: "0,00",
+    totalDeposit: "0,00",
+    totalIncome: "0,00",
+    totalWithdrawal: "0,00",
+  });
+
+  React.useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setUserData({
+          phone: data.phone || user.email || "User",
+          id: `DB-${data.id.substring(0, 5).toUpperCase()}`,
+          balance: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(data.balance || 0),
+          totalRecharge: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(data.reloaded_amount || 0),
+          totalDeposit: "0,00", // Not in schema provided
+          totalIncome: new Intl.NumberFormat('pt-AO', { minimumFractionDigits: 2 }).format(data.income || 0),
+          totalWithdrawal: "0,00", // Not in schema provided
+        });
+      }
+    }
   };
 
   const actionButtons = [
@@ -64,7 +93,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lan
             <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.3em] mb-2">{t.totalBalance}</p>
             <h3 className="text-4xl font-black">{userData.balance} <span className="text-lg text-primary">Kz</span></h3>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-y-8 gap-x-4 border-t border-white/10 pt-8 relative z-10">
             <div>
               <p className="text-white/40 text-[9px] font-black uppercase mb-1">Recarga</p>
@@ -91,7 +120,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lan
       <div className="px-6 mt-10 space-y-6">
         <h4 className="px-2 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">{t.rewardsCenter}</h4>
         <div className="grid grid-cols-2 gap-5">
-          <button 
+          <button
             onClick={() => setView(View.TASKS)}
             className="bg-white dark:bg-dark-card p-6 rounded-[32px] border border-gray-100 dark:border-white/5 shadow-xl flex flex-col items-center gap-4 active:scale-95 transition-all group"
           >
@@ -104,7 +133,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lan
             </div>
           </button>
 
-          <button 
+          <button
             onClick={() => setView(View.GIFT)}
             className="bg-white dark:bg-dark-card p-6 rounded-[32px] border border-gray-100 dark:border-white/5 shadow-xl flex flex-col items-center gap-4 active:scale-95 transition-all group"
           >
@@ -122,10 +151,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lan
       {/* Main Actions List */}
       <div className="px-6 mt-10 space-y-4">
         <h4 className="px-2 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4">{t.mgmtSupport}</h4>
-        
+
         <div className="bg-white dark:bg-dark-card rounded-[40px] overflow-hidden border border-gray-100 dark:border-white/5 shadow-2xl">
           {actionButtons.map((btn, idx) => (
-            <button 
+            <button
               key={idx}
               onClick={btn.action}
               className="w-full flex items-center gap-5 px-8 py-5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-50 dark:border-white/5 last:border-0 group"
@@ -137,7 +166,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lan
           ))}
         </div>
 
-        <button 
+        <button
           onClick={onLogout}
           className="w-full mt-10 flex items-center justify-center gap-3 py-5 bg-red-50 dark:bg-red-900/10 text-red-500 font-black rounded-3xl hover:bg-red-500 hover:text-white transition-all border border-red-100 dark:border-red-900/20 shadow-xl shadow-red-500/10"
         >
