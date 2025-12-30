@@ -8,7 +8,7 @@ import { Language, Theme } from './types';
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
+  const [showRegister, setShowRegister] = useState(true);
 
   useEffect(() => {
     // Check active session

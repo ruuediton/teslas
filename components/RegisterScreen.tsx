@@ -14,6 +14,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
     inviteCode: ''
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
