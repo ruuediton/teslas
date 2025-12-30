@@ -32,7 +32,7 @@ export const InvitationGenerator: React.FC<InvitationGeneratorProps> = ({ onBack
 
       if (profile?.invite_code) {
         setInviteCode(profile.invite_code);
-        setInviteUrl(`https://deepbank.app/register?ref=${profile.invite_code}`);
+        setInviteUrl(`https://deepbank-eight.vercel.app/register?ref=${profile.invite_code}`);
 
         // Fetch count of direct subordinates
         const { count } = await supabase
