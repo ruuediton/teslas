@@ -196,27 +196,7 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-12">
-        {/* Seção 1: Estatísticas */}
-        <section className="space-y-4">
-          <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] pl-2">
-            {t.statsTitle}
-          </h3>
-          <div className="bg-primary rounded-[32px] p-6 text-white shadow-xl shadow-primary/20 relative overflow-hidden">
-            <div className="grid grid-cols-2 gap-6 relative z-10">
-              <div className="space-y-1">
-                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Solicitaram Hoje</p>
-                <h4 className="text-2xl font-black">{stats.requestedToday}</h4>
-              </div>
-              <div className="space-y-1">
-                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Receberam Hoje</p>
-                <h4 className="text-2xl font-black">{stats.paidToday}</h4>
-              </div>
-            </div>
-            <span className="material-symbols-outlined absolute -right-6 -bottom-6 text-[120px] text-white/5 rotate-12">monitoring</span>
-          </div>
-        </section>
-
-        {/* Seção 3: Enviar Comprovante */}
+        {/* Seção 1: Enviar Comprovante */}
         <section className="space-y-4">
           <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] pl-2">
             {t.sendProof}
@@ -279,9 +259,9 @@ export const SocialProofPage: React.FC<SocialProofPageProps> = ({ onBack, lang }
             ) : (
               proofs.map((p) => (
                 <div key={p.id} className="bg-white dark:bg-dark-card rounded-[32px] border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden flex flex-col group">
-                  <div className="relative h-48 bg-gray-100 dark:bg-dark/50 overflow-hidden cursor-pointer" onClick={() => setFullscreenImage(p.imageUrl)}>
-                    <img src={p.imageUrl} alt="Proof" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  <div className="relative h-56 bg-white dark:bg-dark/50 overflow-hidden cursor-pointer" onClick={() => setFullscreenImage(p.imageUrl)}>
+                    <img src={p.imageUrl} alt="Proof" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="eager" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent"></div>
                     <div className="absolute bottom-4 left-6 right-6 flex justify-between items-end">
                       <div>
                         <p className="text-[10px] font-black text-white/70 uppercase tracking-widest">{p.date}</p>
