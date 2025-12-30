@@ -39,15 +39,23 @@ export const TasksPage: React.FC<TasksPageProps> = ({ onBack, lang }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // 1. Calcular renda diária total (soma da user_purchases)
+      // 1. Calcular renda diária total (soma da user_purchases - apenas pacotes ativos)
+      const now = new Date();
       const { data: purchases, error: purchaseError } = await supabase
         .from('user_purchases')
-        .select('daily_income')
+        .select('daily_income, purchase_date, duration_days')
         .eq('user_id', user.id);
 
       if (purchaseError) throw purchaseError;
 
-      const total = purchases?.reduce((acc, curr) => acc + Number(curr.daily_income), 0) || 0;
+      const activePurchases = purchases?.filter(p => {
+        const purchaseDate = new Date(p.purchase_date);
+        const expiryDate = new Date(purchaseDate);
+        expiryDate.setDate(expiryDate.getDate() + p.duration_days);
+        return now <= expiryDate;
+      }) || [];
+
+      const total = activePurchases.reduce((acc, curr) => acc + Number(curr.daily_income), 0) || 0;
       setDailyIncomeTotal(total);
 
       // 2. Buscar histórico de tarefas concluídas hoje
@@ -56,7 +64,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ onBack, lang }) => {
         .from('tarefas_diarias')
         .select('*')
         .eq('user_id', user.id)
-        .gte('data_atribuicao', today);
+        .eq('data_atribuicao', today);
 
       if (taskError) throw taskError;
       const isCompleted = todayTasks && todayTasks.length > 0;
@@ -97,18 +105,85 @@ export const TasksPage: React.FC<TasksPageProps> = ({ onBack, lang }) => {
     setTimeout(() => setShowFeedback(null), 3000);
   };
 
-  const executeTask = (taskId: string) => {
+  const executeTask = async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task || task.status === 'completed') return;
 
     setExecutingTaskId(taskId);
 
-    // Simulação de execução da tarefa
-    setTimeout(() => {
-      setExecutingTaskId(null);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // 1. Validações obrigatórias
+      if (dailyIncomeTotal <= 0) {
+        throw new Error('Você não possui renda diária disponível hoje.');
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayTasks } = await supabase
+        .from('tarefas_diarias')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('data_atribuicao', today);
+
+      if (todayTasks && todayTasks.length > 0) {
+        throw new Error('A renda de hoje já foi coletada.');
+      }
+
+      // 2. Obter saldo atual
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('balance')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      const saldoAntes = Number(profile.balance);
+      const saldoDepois = saldoAntes + dailyIncomeTotal;
+
+      // 3. Registrar tarefa diária
+      const { error: insertError } = await supabase
+        .from('tarefas_diarias')
+        .insert({
+          user_id: user.id,
+          valor_renda: dailyIncomeTotal,
+          saldo_antes: saldoAntes,
+          saldo_depois: saldoDepois,
+          data_atribuicao: today,
+          status: 'concluido'
+        });
+
+      if (insertError) throw insertError;
+
+      // 4. Atualizar saldo do usuário
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ balance: saldoDepois })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Sucesso
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'completed' as const } : t));
       triggerFeedback('success', `Tarefa "${task.name}" concluída!`, task.reward);
-    }, 2500);
+
+      // Recarregar histórico
+      const { data: newHistory } = await supabase
+        .from('tarefas_diarias')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('data_atribuicao', { ascending: false })
+        .limit(10);
+      setHistory(newHistory || []);
+
+    } catch (error: any) {
+      console.error('Error executing task:', error);
+      triggerFeedback('error', error.message || 'Ocorreu um erro ao executar a tarefa.');
+    } finally {
+      setExecutingTaskId(null);
+    }
   };
 
   return (
@@ -177,7 +252,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ onBack, lang }) => {
                     <div className="flex justify-between items-start">
                       <h4 className="font-bold text-dark dark:text-white text-sm truncate">{task.name}</h4>
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${task.type === 'daily' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-500' :
-                          task.type === 'special' ? 'bg-accent/10 dark:bg-accent/20 text-accent' : 'bg-gray-50 dark:bg-white/5 text-gray-400'
+                        task.type === 'special' ? 'bg-accent/10 dark:bg-accent/20 text-accent' : 'bg-gray-50 dark:bg-white/5 text-gray-400'
                         }`}>
                         {task.type === 'daily' ? 'DIÁRIA' : task.type === 'special' ? 'ESPECIAL' : 'BÔNUS'}
                       </span>
