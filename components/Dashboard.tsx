@@ -56,14 +56,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [currentView]);
 
-  useEffect(() => {
-    // Show spinner during view transitions
-    setGlobalLoading(true);
-    const timer = setTimeout(() => {
-      setGlobalLoading(false);
-    }, 600); // Small delay for "smoothness" and to show the spinner exists
-    return () => clearTimeout(timer);
-  }, [currentView, setGlobalLoading]);
+  // Removed forced transition loading to ensure non-blocking UI and prevent potential white screen flicker
+  // Each page will manage its own loading state for data fetching as needed.
 
   const t = translations[appLanguage];
 

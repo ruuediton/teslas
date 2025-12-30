@@ -2,37 +2,41 @@ import React from 'react';
 import { useLoading } from './LoadingContext';
 
 export const Loading: React.FC = () => {
-    const { isLoading, message } = useLoading();
+  const { isLoading, message } = useLoading();
 
-    if (!isLoading) return null;
+  // Removed early return to allow CSS transitions to work correctly
+  // The component remains rendered but invisible and non-interactive when not loading.
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/5 animate-in fade-in duration-300">
-            <div className="bg-black/80 backdrop-blur-md p-6 rounded-3xl flex flex-col items-center gap-4 shadow-2xl min-w-[140px]">
-                <div className="ios-spinner">
-                    {[...Array(12)].map((_, i) => (
-                        <div key={i} className="bar" style={{ transform: `rotate(${i * 30}deg) translate(0, -120%)`, animationDelay: `${-1.1 + i * 0.1}s` }} />
-                    ))}
-                </div>
-                {message && (
-                    <span className="text-white text-xs font-bold tracking-widest uppercase opacity-80 mt-2">
-                        {message}
-                    </span>
-                )}
-            </div>
+  return (
+    <div
+      className={`fixed inset-0 z-[100] flex items-center justify-center transition-opacity duration-300 bg-black/20 backdrop-blur-[2px] ${isLoading ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+    >
+      <div className="bg-black/80 backdrop-blur-md p-6 rounded-[32px] flex flex-col items-center gap-4 shadow-2xl min-w-[150px] animate-in zoom-in-95 duration-300">
+        <div className="ios-spinner">
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="bar" style={{ transform: `rotate(${i * 30}deg) translate(0, -120%)`, animationDelay: `${-1.1 + i * 0.1}s` }} />
+          ))}
+        </div>
+        {(message || 'Carregando...') && (
+          <span className="text-white text-[10px] font-black tracking-[0.2em] uppercase opacity-90 mt-2 text-center max-w-[200px]">
+            {message || 'Carregando...'}
+          </span>
+        )}
+      </div>
 
-            <style>{`
+      <style>{`
         .ios-spinner {
           position: relative;
-          width: 32px;
-          height: 32px;
+          width: 36px;
+          height: 36px;
         }
         .ios-spinner .bar {
           position: absolute;
           left: 44.5%;
           top: 37%;
-          width: 10%;
-          height: 30%;
+          width: 8%;
+          height: 28%;
           background: white;
           border-radius: 50px;
           opacity: 0;
@@ -40,9 +44,9 @@ export const Loading: React.FC = () => {
         }
         @keyframes ios-spinner-anim {
           from { opacity: 1; }
-          to { opacity: 0.25; }
+          to { opacity: 0.2; }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };

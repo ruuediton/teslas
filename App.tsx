@@ -62,29 +62,29 @@ const App: React.FC = () => {
     setShowRegister(false);
   };
 
-  if (isLoggedIn) {
-    return (
-      <Dashboard
-        onLogout={handleLogout}
-        appLanguage={language}
-        appTheme={theme}
-        setAppLanguage={setLanguage}
-        setAppTheme={setTheme}
-      />
-    );
-  }
-
   return (
     <LoadingProvider>
       <div className={`min-h-screen font-sans ${theme === 'dark' ? 'dark' : ''}`}>
-        {showRegister ? (
-          <RegisterScreen onBackToLogin={() => setShowRegister(false)} />
-        ) : (
-          <LoginScreen
-            onLogin={handleLogin}
-            onGoToRegister={() => setShowRegister(true)}
-          />
-        )}
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark text-primary font-bold">Iniciando DeepBank...</div>}>
+          {isLoggedIn ? (
+            <Dashboard
+              onLogout={handleLogout}
+              appLanguage={language}
+              appTheme={theme}
+              setAppLanguage={setLanguage}
+              setAppTheme={setTheme}
+            />
+          ) : (
+            showRegister ? (
+              <RegisterScreen onBackToLogin={() => setShowRegister(false)} />
+            ) : (
+              <LoginScreen
+                onLogin={handleLogin}
+                onGoToRegister={() => setShowRegister(true)}
+              />
+            )
+          )}
+        </React.Suspense>
       </div>
       <Loading />
     </LoadingProvider>
