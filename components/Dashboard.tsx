@@ -12,7 +12,6 @@ import { RechargeFlow } from './RechargeFlow';
 import { WithdrawalPage } from './WithdrawalPage';
 import { CompanyIntro } from './CompanyIntro';
 import { ConvertBonusPage } from './ConvertBonusPage';
-import { ChatBot } from './ChatBot';
 import { NotificationsPage } from './NotificationsPage';
 import { DownloadAppPage } from './DownloadAppPage';
 import { AboutUsPage } from './AboutUsPage';
@@ -25,6 +24,7 @@ import { GiftPage } from './GiftPage';
 import { TasksPage } from './TasksPage';
 import { SocialProofPage } from './SocialProofPage';
 import { WelcomePopup } from './WelcomePopup';
+import { MyTeamPage } from './MyTeamPage';
 import { translations } from '../translations';
 
 interface DashboardProps {
@@ -101,7 +101,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
       case View.PURCHASED_PACKAGES:
         return <PurchasedPackagesPage onBack={() => setCurrentView(View.PRODUCTS)} lang={appLanguage} />;
       case View.INVITATION:
-        return <InvitationGenerator onBack={() => setCurrentView(View.HOME)} lang={appLanguage} />;
+        return <InvitationGenerator onBack={() => setCurrentView(View.HOME)} lang={appLanguage} onNavigateToTeam={() => setCurrentView(View.MY_TEAM)} />;
+      case View.MY_TEAM:
+        return <MyTeamPage onBack={() => setCurrentView(View.INVITATION)} lang={appLanguage} />;
       case View.PROFILE:
         return <ProfilePage onLogout={onLogout} setView={setCurrentView} lang={appLanguage} />;
       case View.ADD_BANK:
@@ -121,8 +123,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
         return <CompanyIntro onFinish={() => setCurrentView(View.HOME)} lang={appLanguage} />;
       case View.CONVERT_BONUS:
         return <ConvertBonusPage onBack={() => setCurrentView(View.PROFILE)} lang={appLanguage} />;
-      case View.CHAT:
-        return <ChatBot onBack={() => setCurrentView(View.PROFILE)} onNavigateToSupport={() => setCurrentView(View.CUSTOMER_SERVICE)} lang={appLanguage} />;
       case View.NOTIFICATIONS:
         return <NotificationsPage onBack={() => setCurrentView(View.HOME)} lang={appLanguage} />;
       case View.DOWNLOAD_APP:
@@ -132,7 +132,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       case View.FAQ:
         return <FAQPage onBack={() => setCurrentView(View.PROFILE)} onNavigateToSupport={() => setCurrentView(View.CUSTOMER_SERVICE)} lang={appLanguage} />;
       case View.CUSTOMER_SERVICE:
-        return <CustomerServicePage onBack={() => setCurrentView(View.PROFILE)} onOpenChat={() => setCurrentView(View.CHAT)} lang={appLanguage} />;
+        return <CustomerServicePage onBack={() => setCurrentView(View.PROFILE)} onOpenChat={() => { }} lang={appLanguage} />;
       case View.TRANSACTION_HISTORY:
         return <TransactionHistoryPage onBack={() => setCurrentView(View.PROFILE)} lang={appLanguage} />;
       case View.SETTINGS:

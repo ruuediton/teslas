@@ -119,19 +119,6 @@ export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack
 
         {/* Channels Grid */}
         <div className="grid grid-cols-1 gap-4">
-          <button
-            onClick={onOpenChat}
-            className="w-full flex items-center gap-4 p-5 bg-primary text-white rounded-3xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
-          >
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <span className="material-symbols-outlined">chat_bubble</span>
-            </div>
-            <div className="text-left">
-              <p className="font-bold text-sm">Chat em Tempo Real</p>
-              <p className="text-[10px] text-white/70 uppercase font-black tracking-widest">Atendimento IA 24/7</p>
-            </div>
-          </button>
-
           <div className="grid grid-cols-1 gap-3">
             {contactChannels.map((channel) => (
               <button
@@ -183,8 +170,8 @@ export const CustomerServicePage: React.FC<CustomerServicePageProps> = ({ onBack
               type="submit"
               disabled={isSending || formSent}
               className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${formSent
-                  ? 'bg-green-500 text-white'
-                  : 'bg-dark text-white hover:bg-black shadow-lg shadow-dark/10'
+                ? 'bg-green-500 text-white'
+                : 'bg-dark text-white hover:bg-black shadow-lg shadow-dark/10'
                 }`}
             >
               {isSending ? (

@@ -22,7 +22,8 @@ export enum View {
   GIFT = 'gift',
   TASKS = 'tasks',
   SOCIAL_PROOF = 'social_proof',
-  PURCHASED_PACKAGES = 'purchased_packages'
+  PURCHASED_PACKAGES = 'purchased_packages',
+  MY_TEAM = 'my_team'
 }
 
 export type Language = 'pt' | 'en';

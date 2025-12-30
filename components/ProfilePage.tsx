@@ -107,7 +107,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lan
     { icon: 'info', label: t.aboutUs, color: 'text-gray-600', action: () => setView(View.ABOUT_US) },
     { icon: 'help_outline', label: t.faq, color: 'text-gray-600', action: () => setView(View.FAQ) },
     { icon: 'support_agent', label: t.customerService, color: 'text-accent', action: () => setView(View.CUSTOMER_SERVICE) },
-    { icon: 'chat', label: t.chat, color: 'text-primary', action: () => setView(View.CHAT) },
     { icon: 'history', label: t.transactionHistory, color: 'text-gray-500', action: () => setView(View.TRANSACTION_HISTORY) },
     { icon: 'settings', label: t.settings, color: 'text-gray-400', action: () => setView(View.SETTINGS) },
     { icon: 'notifications', label: t.notifications, color: 'text-primary', action: () => setView(View.NOTIFICATIONS) },
