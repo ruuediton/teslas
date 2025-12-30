@@ -7,10 +7,10 @@ export const Loading: React.FC = () => {
   return (
     <>
       <div
-        className={`fixed inset-0 z-[100] flex items-center justify-center transition-opacity duration-300 bg-black/10 backdrop-blur-[1px] ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`fixed inset-0 z-[100] flex items-center justify-center transition-opacity duration-300 bg-transparent pointer-events-none ${isLoading ? 'opacity-100' : 'opacity-0'
           }`}
       >
-        <div className="bg-black/80 backdrop-blur-xl p-5 rounded-[24px] flex flex-col items-center justify-center shadow-xl w-20 h-20 animate-in zoom-in-95 duration-300">
+        <div className="bg-black/20 backdrop-blur-xl p-6 rounded-[24px] flex flex-col items-center justify-center shadow-sm w-20 h-20 animate-in zoom-in-95 duration-300 pointer-events-auto border border-white/10">
           <div className="ios-spinner">
             {[...Array(12)].map((_, i) => (
               <div key={i} className="bar" style={{ transform: `rotate(${i * 30}deg) translate(0, -120%)`, animationDelay: `${-1.1 + i * 0.1}s` }} />
@@ -52,7 +52,7 @@ export const Loading: React.FC = () => {
         }
         @keyframes ios-spinner-anim {
           from { opacity: 1; }
-          to { opacity: 0.15; }
+          to { opacity: 0.25; }
         }
       `}</style>
     </>
