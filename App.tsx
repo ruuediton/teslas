@@ -5,6 +5,8 @@ import { LoginScreen } from './components/LoginScreen';
 import { Dashboard } from './components/Dashboard';
 import { RegisterScreen } from './components/RegisterScreen';
 import { Language, Theme } from './types';
+import { LoadingProvider } from './components/LoadingContext';
+import { Loading } from './components/Loading';
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -73,16 +75,19 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen font-sans ${theme === 'dark' ? 'dark' : ''}`}>
-      {showRegister ? (
-        <RegisterScreen onBackToLogin={() => setShowRegister(false)} />
-      ) : (
-        <LoginScreen
-          onLogin={handleLogin}
-          onGoToRegister={() => setShowRegister(true)}
-        />
-      )}
-    </div>
+    <LoadingProvider>
+      <div className={`min-h-screen font-sans ${theme === 'dark' ? 'dark' : ''}`}>
+        {showRegister ? (
+          <RegisterScreen onBackToLogin={() => setShowRegister(false)} />
+        ) : (
+          <LoginScreen
+            onLogin={handleLogin}
+            onGoToRegister={() => setShowRegister(true)}
+          />
+        )}
+      </div>
+      <Loading />
+    </LoadingProvider>
   );
 };
 

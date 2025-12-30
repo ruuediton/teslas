@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { View as AppView, Language } from '../types';
+import { useLoading } from './LoadingContext';
 
 interface ConvertBonusPageProps {
   onBack: () => void;
@@ -15,6 +16,7 @@ interface PendingSubordinate {
 }
 
 export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const [pendingSubordinates, setPendingSubordinates] = useState<PendingSubordinate[]>([]);
   const [loading, setLoading] = useState(true);
   const [targetPhone, setTargetPhone] = useState('');
@@ -29,6 +31,7 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
   const fetchPendingSubordinates = async () => {
     try {
       setLoading(true);
+      setGlobalLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -56,6 +59,7 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
       console.error('Error fetching pending bonuses:', error);
     } finally {
       setLoading(false);
+      setGlobalLoading(false);
     }
   };
 
@@ -87,6 +91,7 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
     }
 
     setIsProcessing(true);
+    setGlobalLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -158,6 +163,7 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
       triggerFeedback('error', lang === 'pt' ? 'Ocorreu um erro no processamento.' : 'An error occurred during processing.');
     } finally {
       setIsProcessing(false);
+      setGlobalLoading(false);
     }
   };
 

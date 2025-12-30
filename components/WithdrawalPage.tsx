@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Language } from '../types';
 import { translations } from '../translations';
+import { useLoading } from './LoadingContext';
 
 interface WithdrawalPageProps {
   onBack: () => void;
@@ -31,6 +32,7 @@ export const WithdrawalPage: React.FC<WithdrawalPageProps> = ({
   onRedirectAddBank,
   lang
 }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const t = translations[lang];
 
   const [userBalance, setUserBalance] = useState(0);
@@ -54,33 +56,43 @@ export const WithdrawalPage: React.FC<WithdrawalPageProps> = ({
   }, []);
 
   const fetchData = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    setGlobalLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setGlobalLoading(false);
+        return;
+      }
 
-    // Fetch Balance
-    const { data: profile } = await supabase.from('profiles').select('balance').eq('id', user.id).single();
-    if (profile) setUserBalance(profile.balance || 0);
+      // Fetch Balance
+      const { data: profile } = await supabase.from('profiles').select('balance').eq('id', user.id).single();
+      if (profile) setUserBalance(profile.balance || 0);
 
-    // Fetch Bank Accounts for local display logic (though RPC checks it too)
-    const { data: banks } = await supabase.from('bancos_clientes').select('*').eq('user_id', user.id);
-    if (banks) {
-      setUserBankAccounts(banks.map(b => ({ id: b.id, bank: b.nome_do_banco, iban: b.iban })));
-      if (banks.length > 0) setFormData(prev => ({ ...prev, selectedBankId: banks[0].id }));
-    }
+      // Fetch Bank Accounts for local display logic (though RPC checks it too)
+      const { data: banks } = await supabase.from('bancos_clientes').select('*').eq('user_id', user.id);
+      if (banks) {
+        setUserBankAccounts(banks.map(b => ({ id: b.id, bank: b.nome_do_banco, iban: b.iban })));
+        if (banks.length > 0) setFormData(prev => ({ ...prev, selectedBankId: banks[0].id }));
+      }
 
-    // Fetch History
-    const { data: withdrawals } = await supabase.from('retirada_clientes').select('*').eq('user_id', user.id).order('data_de_criacao', { ascending: false });
-    if (withdrawals) {
-      setHistory(withdrawals.map((w: any) => ({
-        id: w.id.substring(0, 8),
-        recipientName: w.nome_completo,
-        bankName: w.nome_do_banco,
-        accountNumber: w.iban,
-        requestedAmount: w.valor_solicitado,
-        feePercent: 10,
-        status: w.estado_da_retirada === 'pendente' ? 'Pendente' : w.estado_da_retirada === 'aprovado' ? 'Aprovado' : 'Rejeitado',
-        timestamp: new Date(w.data_de_criacao).toLocaleString('pt-AO')
-      })));
+      // Fetch History
+      const { data: withdrawals } = await supabase.from('retirada_clientes').select('*').eq('user_id', user.id).order('data_de_criacao', { ascending: false });
+      if (withdrawals) {
+        setHistory(withdrawals.map((w: any) => ({
+          id: w.id.substring(0, 8),
+          recipientName: w.nome_completo,
+          bankName: w.nome_do_banco,
+          accountNumber: w.iban,
+          requestedAmount: w.valor_solicitado,
+          feePercent: 10,
+          status: w.estado_da_retirada === 'pendente' ? 'Pendente' : w.estado_da_retirada === 'aprovado' ? 'Aprovado' : 'Rejeitado',
+          timestamp: new Date(w.data_de_criacao).toLocaleString('pt-AO')
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching withdrawal data:', error);
+    } finally {
+      setGlobalLoading(false);
     }
   };
 
@@ -121,6 +133,7 @@ export const WithdrawalPage: React.FC<WithdrawalPageProps> = ({
     }
 
     setIsProcessing(true);
+    setGlobalLoading(true);
 
     try {
       const { data, error } = await supabase.rpc('request_withdrawal', { p_amount: cleanAmount });
@@ -145,6 +158,7 @@ export const WithdrawalPage: React.FC<WithdrawalPageProps> = ({
       triggerFeedback('error', 'Ocorreu um erro ao processar a retirada.');
     } finally {
       setIsProcessing(false);
+      setGlobalLoading(false);
     }
   };
 

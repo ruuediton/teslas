@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { useLoading } from './LoadingContext';
 
 interface LoginScreenProps {
   onLogin: () => void;
@@ -8,9 +9,9 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoToRegister }) => {
+  const { setIsLoading, showWithTimeout } = useLoading();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [errorInfo, setErrorInfo] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -26,7 +27,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoToRegiste
       return;
     }
 
-    setLoading(true);
+    setIsLoading(true);
     try {
       const email = `${phone}@deepbank.user`;
       const { error } = await supabase.auth.signInWithPassword({
@@ -40,14 +41,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoToRegiste
         } else {
           handleDisplayError('Erro ao entrar: ' + error.message);
         }
+        setIsLoading(false);
       } else {
         onLogin();
       }
     } catch (err) {
       handleDisplayError('Ocorreu um erro inesperado.');
       console.error(err);
-    } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -120,17 +121,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoToRegiste
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
+              className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 group"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  Entrar
-                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                </>
-              )}
+              Entrar
+              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </button>
           </form>
 

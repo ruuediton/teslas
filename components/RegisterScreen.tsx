@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { useLoading } from './LoadingContext';
 
 interface RegisterScreenProps {
   onBackToLogin: () => void;
 }
 
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin }) => {
+  const { setIsLoading } = useLoading();
   const [formData, setFormData] = useState({
     phone: '',
     password: '',
@@ -15,7 +17,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
   const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   React.useEffect(() => {
@@ -61,7 +62,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
       return;
     }
 
-    setIsRegistering(true);
+    setIsLoading(true);
 
     try {
       // 1. Validar se o código de convite existe e capturar o ID do convidador
@@ -146,7 +147,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
       console.error('Catch Error:', err);
       triggerFeedback('error', 'Ocorreu um erro inesperado.');
     } finally {
-      setIsRegistering(false);
+      setIsLoading(false);
     }
   };
 
@@ -260,17 +261,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
 
             <button
               type="submit"
-              disabled={isRegistering}
-              className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 group mt-6 disabled:opacity-50"
+              className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 group mt-6"
             >
-              {isRegistering ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  Registrar-se
-                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform text-xl">rocket_launch</span>
-                </>
-              )}
+              Registrar-se
+              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform text-xl">rocket_launch</span>
             </button>
           </form>
 

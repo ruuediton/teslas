@@ -4,6 +4,7 @@ import { View, Language } from '../types';
 import { translations } from '../translations';
 import { supabase } from '../supabaseClient';
 import { UserProfile } from '../types';
+import { useLoading } from './LoadingContext';
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -12,6 +13,7 @@ interface ProfilePageProps {
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lang }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const t = translations[lang];
 
   const [userData, setUserData] = React.useState<UserProfile | any>({
@@ -42,9 +44,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lan
   }, []);
 
   const fetchProfile = async () => {
+    setGlobalLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setGlobalLoading(false);
+        return;
+      }
 
       // 1. Fetch Profile (Balance & Recharge)
       const { data: profile } = await supabase
@@ -91,6 +97,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, setView, lan
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
+    } finally {
+      setGlobalLoading(false);
     }
   };
 

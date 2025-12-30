@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Language } from '../types';
 import { translations } from '../translations';
+import { useLoading } from './LoadingContext';
 
 // Note: Using the backend view 'notificacoes_usuario'
 type TransactionType = 'all' | 'deposito' | 'saque' | 'income' | 'bonus' | 'compra' | 'conta_bancaria';
@@ -22,6 +23,7 @@ interface TransactionHistoryPageProps {
 }
 
 export const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = ({ onBack, lang }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const t = translations[lang];
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -52,6 +54,7 @@ export const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = ({ 
 
   const fetchTransactions = async () => {
     setIsLoading(true);
+    setGlobalLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -80,6 +83,7 @@ export const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = ({ 
       console.error('Error fetching transactions:', err);
     } finally {
       setIsLoading(false);
+      setGlobalLoading(false);
     }
   };
 
@@ -130,8 +134,8 @@ export const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = ({ 
             key={filter.id}
             onClick={() => setActiveFilter(filter.id)}
             className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === filter.id
-                ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                : 'bg-gray-50 dark:bg-white/5 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+              ? 'bg-primary text-white shadow-lg shadow-primary/20'
+              : 'bg-gray-50 dark:bg-white/5 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
               }`}
           >
             {filter.label}

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { useLoading } from './LoadingContext';
 
 interface Gift {
   id: string;
@@ -14,6 +15,7 @@ interface GiftPageProps {
 }
 
 export const GiftPage: React.FC<GiftPageProps> = ({ onBack }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const [couponCode, setCouponCode] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -25,6 +27,8 @@ export const GiftPage: React.FC<GiftPageProps> = ({ onBack }) => {
   }, []);
 
   const loadBonusHistory = async () => {
+    setIsLoading(true);
+    setGlobalLoading(true);
     try {
       const { data, error } = await supabase
         .from('bonus_transacoes')
@@ -36,10 +40,9 @@ export const GiftPage: React.FC<GiftPageProps> = ({ onBack }) => {
       if (data) {
         setReceivedGifts(data);
       }
+    } finally {
       setIsLoading(false);
-    } catch (error) {
-      console.error('Error loading bonus history:', error);
-      setIsLoading(false);
+      setGlobalLoading(false);
     }
   };
 
@@ -56,6 +59,7 @@ export const GiftPage: React.FC<GiftPageProps> = ({ onBack }) => {
     }
 
     setIsRedeeming(true);
+    setGlobalLoading(true);
 
     try {
       const { data, error } = await supabase.rpc('redeem_gift_code', {
@@ -76,6 +80,7 @@ export const GiftPage: React.FC<GiftPageProps> = ({ onBack }) => {
       triggerFeedback('error', 'Erro ao processar código.');
     } finally {
       setIsRedeeming(false);
+      setGlobalLoading(false);
     }
   };
 

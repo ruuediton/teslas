@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { useLoading } from './LoadingContext';
 
 interface AddBankPageProps {
   onBack: () => void;
@@ -9,6 +10,7 @@ interface AddBankPageProps {
 const AVAILABLE_BANKS = ['Banco BAI', 'Banco BFA', 'Banco ATLANTICO', 'Banco BIC'];
 
 export const AddBankPage: React.FC<AddBankPageProps> = ({ onBack }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showBankPicker, setShowBankPicker] = useState(false);
@@ -60,6 +62,7 @@ export const AddBankPage: React.FC<AddBankPageProps> = ({ onBack }) => {
     }
 
     setIsSaving(true);
+    setGlobalLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -98,6 +101,7 @@ export const AddBankPage: React.FC<AddBankPageProps> = ({ onBack }) => {
       }
     } finally {
       setIsSaving(false);
+      setGlobalLoading(false);
     }
   };
 

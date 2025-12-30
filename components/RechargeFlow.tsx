@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Language } from '../types';
 import { translations } from '../translations';
+import { useLoading } from './LoadingContext';
 
 interface RechargeFlowProps {
   onBack: () => void;
@@ -12,6 +13,7 @@ interface RechargeFlowProps {
 
 
 export const RechargeFlow: React.FC<RechargeFlowProps> = ({ onBack, lang }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const t = translations[lang];
   const [step, setStep] = useState(1);
   const [showHistory, setShowHistory] = useState(false);
@@ -34,6 +36,7 @@ export const RechargeFlow: React.FC<RechargeFlowProps> = ({ onBack, lang }) => {
   }, []);
 
   const loadData = async () => {
+    setGlobalLoading(true);
     // Load quick values from products table
     const { data: products } = await supabase.from('products').select('price').eq('status', 'active');
     if (products) {
@@ -65,6 +68,7 @@ export const RechargeFlow: React.FC<RechargeFlowProps> = ({ onBack, lang }) => {
         })));
       }
     }
+    setGlobalLoading(false);
   };
 
   const checkBusinessHours = () => {
@@ -145,6 +149,7 @@ export const RechargeFlow: React.FC<RechargeFlowProps> = ({ onBack, lang }) => {
     }
 
     setIsConcluding(true);
+    setGlobalLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -215,6 +220,7 @@ export const RechargeFlow: React.FC<RechargeFlowProps> = ({ onBack, lang }) => {
       triggerFeedback('error', errorMessage);
     } finally {
       setIsConcluding(false);
+      setGlobalLoading(false);
     }
   };
 

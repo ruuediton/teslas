@@ -3,13 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { Product, Language, View } from '../types';
 import { translations } from '../translations';
 import { supabase } from '../supabaseClient';
+import { useLoading } from './LoadingContext';
 
 interface ProductListPageProps {
   lang: Language;
   onNavigateToPurchased: () => void;
 }
-
 export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNavigateToPurchased }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const t = translations[lang];
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,6 +18,7 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
   const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   useEffect(() => {
+    setGlobalLoading(true);
     fetchProducts();
   }, []);
 
@@ -49,6 +51,7 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
       triggerFeedback('error', 'Erro ao carregar produtos.');
     } finally {
       setIsLoading(false);
+      setGlobalLoading(false);
     }
   };
 
@@ -60,10 +63,12 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
   const handleConfirmPurchase = async () => {
     if (!selectedProduct) return;
 
+    setGlobalLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         triggerFeedback('error', 'Usuário não autenticado.');
+        setGlobalLoading(false);
         return;
       }
 
@@ -77,13 +82,14 @@ export const ProductListPage: React.FC<ProductListPageProps> = ({ lang, onNaviga
       if (data.success) {
         triggerFeedback('success', lang === 'pt' ? data.message : 'Purchase successful!');
         setSelectedProduct(null);
-        // Optionally refresh user balance context if available, or just page state
       } else {
         triggerFeedback('error', data.message || 'Erro ao realizar compra.');
       }
     } catch (error: any) {
       console.error('Purchase error:', error);
       triggerFeedback('error', error.message || 'Erro de conexão.');
+    } finally {
+      setGlobalLoading(false);
     }
   };
 

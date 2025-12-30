@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Language } from '../types';
 import { translations } from '../translations';
+import { useLoading } from './LoadingContext';
 
 interface Task {
   id: string;
@@ -20,6 +21,7 @@ interface TasksPageProps {
 }
 
 export const TasksPage: React.FC<TasksPageProps> = ({ onBack, lang }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const t = translations[lang];
   const [isLoading, setIsLoading] = useState(true);
   const [executingTaskId, setExecutingTaskId] = useState<string | null>(null);
@@ -35,6 +37,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ onBack, lang }) => {
 
   const loadTasksData = async () => {
     setIsLoading(true);
+    setGlobalLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -97,6 +100,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ onBack, lang }) => {
       console.error('Error loading tasks:', error);
     } finally {
       setIsLoading(false);
+      setGlobalLoading(false);
     }
   };
 
@@ -110,6 +114,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ onBack, lang }) => {
     if (!task || task.status === 'completed') return;
 
     setExecutingTaskId(taskId);
+    setGlobalLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -183,6 +188,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ onBack, lang }) => {
       triggerFeedback('error', error.message || 'Ocorreu um erro ao executar a tarefa.');
     } finally {
       setExecutingTaskId(null);
+      setGlobalLoading(false);
     }
   };
 

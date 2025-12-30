@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Language } from '../types';
 import { translations } from '../translations';
+import { useLoading } from './LoadingContext';
 
 interface PurchasedPackage {
   id: string;
@@ -46,13 +47,18 @@ const MOCK_PURCHASED: PurchasedPackage[] = [
 ];
 
 export const PurchasedPackagesPage: React.FC<PurchasedPackagesPageProps> = ({ onBack, lang }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const t = translations[lang];
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
+    setGlobalLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      setGlobalLoading(false);
+    }, 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [setGlobalLoading]);
 
   const formatKz = (val: number) => {
     return new Intl.NumberFormat('pt-AO').format(val) + ' Kz';
@@ -63,18 +69,18 @@ export const PurchasedPackagesPage: React.FC<PurchasedPackagesPageProps> = ({ on
       {/* Header */}
       <div className="bg-white dark:bg-dark h-16 flex items-center justify-between sticky top-0 z-50 border-b border-gray-100 dark:border-white/5 px-4">
         <div className="w-10">
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             className="w-10 h-10 flex items-center justify-center text-dark dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 rounded-full transition-all"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
         </div>
-        
+
         <h1 className="font-extrabold text-dark dark:text-white text-lg absolute left-1/2 -translate-x-1/2 pointer-events-none">
           {t.purchasedPackages}
         </h1>
-        
+
         <div className="w-10"></div>
       </div>
 
@@ -96,9 +102,9 @@ export const PurchasedPackagesPage: React.FC<PurchasedPackagesPageProps> = ({ on
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="px-2">
-               <h2 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">{t.activeInvestments}</h2>
+              <h2 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">{t.activeInvestments}</h2>
             </div>
-            
+
             {MOCK_PURCHASED.map((pkg) => {
               const progress = (pkg.daysActive / pkg.totalDays) * 100;
               return (
@@ -112,28 +118,28 @@ export const PurchasedPackagesPage: React.FC<PurchasedPackagesPageProps> = ({ on
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest">{t.investmentDate}: {pkg.purchaseDate}</p>
                     </div>
                     <div className="text-right">
-                       <p className="text-xs font-black text-green-600 dark:text-green-400">+{formatKz(pkg.dailyIncome)}/dia</p>
+                      <p className="text-xs font-black text-green-600 dark:text-green-400">+{formatKz(pkg.dailyIncome)}/dia</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 border-y border-gray-50 dark:border-white/5 py-5">
-                     <div>
-                       <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-tighter mb-1">{t.accumulatedIncome}</p>
-                       <p className="text-sm font-black text-dark dark:text-white">{formatKz(pkg.totalIncome)}</p>
-                     </div>
-                     <div className="text-right">
-                       <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-tighter mb-1">{t.daysRemaining}</p>
-                       <p className="text-sm font-black text-dark dark:text-white">{pkg.totalDays - pkg.daysActive} {lang === 'pt' ? 'dias' : 'days'}</p>
-                     </div>
+                    <div>
+                      <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-tighter mb-1">{t.accumulatedIncome}</p>
+                      <p className="text-sm font-black text-dark dark:text-white">{formatKz(pkg.totalIncome)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-tighter mb-1">{t.daysRemaining}</p>
+                      <p className="text-sm font-black text-dark dark:text-white">{pkg.totalDays - pkg.daysActive} {lang === 'pt' ? 'dias' : 'days'}</p>
+                    </div>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                       <span>{t.progress}</span>
-                       <span className="text-primary">{progress.toFixed(0)}%</span>
+                      <span>{t.progress}</span>
+                      <span className="text-primary">{progress.toFixed(0)}%</span>
                     </div>
                     <div className="h-2 w-full bg-gray-50 dark:bg-white/5 rounded-full overflow-hidden">
-                       <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+                      <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
                     </div>
                   </div>
                 </div>

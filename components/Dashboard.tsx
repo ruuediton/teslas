@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Language, Theme } from '../types';
+import { useLoading } from './LoadingContext';
 import { BottomNav } from './BottomNav';
 import { ProductListPage } from './ProductListPage';
 import { PurchasedPackagesPage } from './PurchasedPackagesPage';
@@ -42,6 +43,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   setAppLanguage,
   setAppTheme
 }) => {
+  const { setIsLoading: setGlobalLoading } = useLoading();
   const [currentView, setCurrentView] = useState<View>(View.HOME);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -53,6 +55,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
       setShowWelcome(true);
     }
   }, [currentView]);
+
+  useEffect(() => {
+    // Show spinner during view transitions
+    setGlobalLoading(true);
+    const timer = setTimeout(() => {
+      setGlobalLoading(false);
+    }, 600); // Small delay for "smoothness" and to show the spinner exists
+    return () => clearTimeout(timer);
+  }, [currentView, setGlobalLoading]);
+
   const t = translations[appLanguage];
 
   const carouselImages = [
