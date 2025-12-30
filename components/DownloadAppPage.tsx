@@ -9,24 +9,24 @@ export const DownloadAppPage: React.FC<DownloadAppPageProps> = ({ onBack }) => {
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   const platforms = [
-    { 
-      id: 'android', 
-      name: 'Google Play', 
-      icon: 'smartphone', 
+    {
+      id: 'android',
+      name: 'Google Play',
+      icon: 'smartphone',
       desc: 'Versão oficial para Android',
       color: 'bg-green-500'
     },
-    { 
-      id: 'ios', 
-      name: 'App Store', 
-      icon: 'apple', 
+    {
+      id: 'ios',
+      name: 'App Store',
+      icon: 'apple',
       desc: 'Versão oficial para iOS (iPhone)',
       color: 'bg-dark'
     },
-    { 
-      id: 'apk', 
-      name: 'Arquivo APK', 
-      icon: 'download_for_offline', 
+    {
+      id: 'apk',
+      name: 'Arquivo APK',
+      icon: 'download_for_offline',
       desc: 'Instalação direta (Android)',
       color: 'bg-primary'
     }
@@ -34,10 +34,20 @@ export const DownloadAppPage: React.FC<DownloadAppPageProps> = ({ onBack }) => {
 
   const handleDownload = (id: string) => {
     setIsDownloading(id);
+
     setTimeout(() => {
       setIsDownloading(null);
-      // Aqui seria o link real de download
-      alert(`Iniciando download da versão ${id.toUpperCase()}...`);
+
+      if (id === 'apk') {
+        const link = document.createElement('a');
+        link.href = '/deepbank.apk'; // Caminho interno para o APK
+        link.download = 'deepbank.apk';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        alert(`Iniciando download da versão ${id.toUpperCase()}... (Link em breve nas lojas oficiais)`);
+      }
     }, 1500);
   };
 
@@ -46,16 +56,16 @@ export const DownloadAppPage: React.FC<DownloadAppPageProps> = ({ onBack }) => {
       {/* Header */}
       <div className="bg-white h-16 flex items-center justify-between sticky top-0 z-50 border-b border-gray-100 px-4">
         <div className="w-10">
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             className="w-10 h-10 flex items-center justify-center text-dark hover:bg-gray-50 rounded-full transition-all"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
         </div>
-        
+
         <h1 className="font-extrabold text-dark text-lg">Baixar aplicativo</h1>
-        
+
         <div className="w-10"></div>
       </div>
 
@@ -74,7 +84,7 @@ export const DownloadAppPage: React.FC<DownloadAppPageProps> = ({ onBack }) => {
         {/* Platform List */}
         <div className="space-y-4">
           {platforms.map((platform) => (
-            <div 
+            <div
               key={platform.id}
               className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between group hover:shadow-md transition-all"
             >
@@ -87,7 +97,7 @@ export const DownloadAppPage: React.FC<DownloadAppPageProps> = ({ onBack }) => {
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{platform.desc}</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => handleDownload(platform.id)}
                 disabled={isDownloading !== null}
                 className="bg-gray-50 hover:bg-primary hover:text-white text-primary px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2"
