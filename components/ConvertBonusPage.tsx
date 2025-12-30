@@ -72,8 +72,17 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
 
   const handleConvert = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const amountNumber = Number(targetAmount);
+
     if (!targetPhone || !targetAmount) {
       triggerFeedback('error', lang === 'pt' ? 'Preencha os dados do subordinado.' : 'Fill in subordinate data.');
+      return;
+    }
+
+    // Validação do valor mínimo
+    if (amountNumber <= 100) {
+      triggerFeedback('error', lang === 'pt' ? 'Valor mínimo para conversão: 100 Kz.' : 'Minimum conversion amount: 100 Kz.');
       return;
     }
 
