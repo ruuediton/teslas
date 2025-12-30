@@ -77,7 +77,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
     View.PROFILE,
     View.TRANSACTION_HISTORY,
     View.GIFT,
-    View.TASKS,
     View.SOCIAL_PROOF
   ];
   const showBottomNav = mainViews.includes(currentView);
