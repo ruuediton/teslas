@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
 
 interface LoadingContextType {
     isLoading: boolean;
@@ -6,6 +6,8 @@ interface LoadingContextType {
     message: string;
     setMessage: (msg: string) => void;
     showWithTimeout: (loading: boolean, timeout?: number) => void;
+    showTimeoutError: boolean;
+    setShowTimeoutError: (show: boolean) => void;
 }
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
@@ -13,6 +15,7 @@ const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
+    const [showTimeoutError, setShowTimeoutError] = useState(false);
 
     const setGlobalLoading = useCallback((loading: boolean, msg: string = '') => {
         setIsLoading(loading);
@@ -34,13 +37,32 @@ export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, []);
 
+    // Global Timeout: 10 seconds of consecutive loading
+    useEffect(() => {
+        let timer: any;
+        if (isLoading) {
+            timer = setTimeout(() => {
+                setIsLoading(false);
+                setMessage('');
+                setShowTimeoutError(true);
+                // Close automatically after 8 seconds (Portuguese text is longer)
+                setTimeout(() => setShowTimeoutError(false), 8000);
+            }, 10000);
+        }
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [isLoading]);
+
     const contextValue = useMemo(() => ({
         isLoading,
         setIsLoading: setGlobalLoading,
         message,
         setMessage,
-        showWithTimeout
-    }), [isLoading, message, setGlobalLoading, showWithTimeout]);
+        showWithTimeout,
+        showTimeoutError,
+        setShowTimeoutError
+    }), [isLoading, message, setGlobalLoading, showWithTimeout, showTimeoutError]);
 
     return (
         <LoadingContext.Provider value={contextValue}>
