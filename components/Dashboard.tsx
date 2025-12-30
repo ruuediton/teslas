@@ -205,7 +205,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* 4. Seção Institucional */}
-            <div className="px-6 mt-4 space-y-6">
+            <div className="px-6 mt-20 space-y-6">
               <h3 className="text-lg font-black text-dark dark:text-white flex items-center gap-2">
                 <span className="w-2 h-8 bg-primary rounded-full"></span>
                 {t.instTitle}
