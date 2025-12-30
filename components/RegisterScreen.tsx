@@ -14,9 +14,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
     inviteCode: ''
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      setFormData(prev => ({ ...prev, inviteCode: ref.toUpperCase() }));
+    }
+  }, []);
 
   const triggerFeedback = (type: 'success' | 'error', message: string) => {
     setShowFeedback({ type, message });
@@ -53,26 +57,31 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
       return;
     }
 
-    const inviteRegex = /^[a-zA-Z0-9]{6,}$/;
-    if (!inviteRegex.test(formData.inviteCode)) {
-      triggerFeedback('error', 'Código de convite inválido. Deve ter pelo menos 6 caracteres.');
-      return;
-    }
-
-    setIsRegistering(true);
-
     setIsRegistering(true);
 
     try {
+      // 1. Validar se o código de convite existe e capturar o ID do convidador
+      const { data: convidador, error: inviteError } = await supabase
+        .from('profiles')
+        .select('id, invite_code')
+        .eq('invite_code', formData.inviteCode)
+        .single();
+
+      if (inviteError || !convidador) {
+        triggerFeedback('error', 'Código de convite inválido ou não encontrado.');
+        setIsRegistering(false);
+        return;
+      }
+
       const email = `${formData.phone}@deepbank.user`;
 
+      // 2. Criar conta de autenticação
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: formData.password,
       });
 
       if (authError) {
-        console.error('Auth Error:', authError);
         if (authError.message.includes('already registered')) {
           triggerFeedback('error', 'Este número de telefone já está registrado.');
         } else {
@@ -83,13 +92,14 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
       }
 
       if (authData.user) {
+        // 3. Salvar Perfil do novo usuário
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert([
             {
               id: authData.user.id,
               phone: formData.phone,
-              invite_code: formData.inviteCode,
+              invite_code: Math.random().toString(36).substring(2, 9).toUpperCase(), // Gera código único para o novo user
               balance: 0,
               reloaded_amount: 0,
               income: 0,
@@ -98,10 +108,29 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
           ]);
 
         if (profileError) {
-          console.error('Profile Error:', profileError);
           triggerFeedback('error', 'Erro ao salvar perfil: ' + profileError.message);
           setIsRegistering(false);
           return;
+        }
+
+        // 4. Criar vínculo na red_equipe (Nível 1)
+        const { error: teamError } = await supabase
+          .from('red_equipe')
+          .insert([
+            {
+              user_id_convidador: convidador.id,
+              telefone_subordinado: formData.phone,
+              codigo_convite: formData.inviteCode,
+              valor: 0,
+              investimento_valido: false,
+              data_convite: new Date().toISOString()
+            }
+          ]);
+
+        if (teamError) {
+          console.error('Erro ao criar vínculo de equipe:', teamError);
+          // Não bloqueamos o sucesso do cadastro se apenas o vínculo falhar, 
+          // mas logamos o erro para auditoria.
         }
 
         triggerFeedback('success', 'Cadastro realizado com sucesso!');

@@ -55,7 +55,7 @@ export const InvitationGenerator: React.FC<InvitationGeneratorProps> = ({ onBack
   };
 
   const rewardsData = [
-    { level: '1', value: '2.000 Kz', percentage: '12%' },
+    { level: '1', value: 'Variável', percentage: '15%' },
   ];
 
   return (
