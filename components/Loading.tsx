@@ -1,7 +1,11 @@
 import React from 'react';
 import { useLoading } from './LoadingContext';
 
-export const Loading: React.FC = () => {
+interface LoadingProps {
+  lang: 'pt' | 'en';
+}
+
+export const Loading: React.FC<LoadingProps> = ({ lang }) => {
   const { isLoading, showTimeoutError } = useLoading();
 
   return (
@@ -25,9 +29,9 @@ export const Loading: React.FC = () => {
             <div className="w-16 h-16 rounded-full flex items-center justify-center mb-1 bg-red-50 dark:bg-red-900/20">
               <span className="material-symbols-outlined text-4xl text-red-500">wifi_off</span>
             </div>
-            <p className="text-base font-extrabold text-red-600">Erro de conectividade</p>
+            <p className="text-base font-extrabold text-red-600">{lang === 'pt' ? 'Erro de conectividade' : 'Connectivity error'}</p>
             <p className="text-sm font-bold text-dark/70 dark:text-white/70 leading-relaxed">
-              Não foi possível concluir a operação. Verifique sua conexão com a internet ou a estabilidade da rede e tente novamente.
+              {lang === 'pt' ? 'Não foi possível concluir a operação. Verifique sua conexão com a internet ou a estabilidade da rede e tente novamente.' : 'The operation could not be completed. Please check your internet connection or network stability and try again.'}
             </p>
           </div>
         </div>

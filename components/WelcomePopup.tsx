@@ -1,16 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { View } from '../types';
+import { View, Language } from '../types';
+import { translations } from '../translations';
 
 interface WelcomePopupProps {
     onClose: () => void;
     onNavigate: (view: View) => void;
+    lang: Language;
 }
 
-export const WelcomePopup: React.FC<WelcomePopupProps> = ({ onClose, onNavigate }) => {
+export const WelcomePopup: React.FC<WelcomePopupProps> = ({ onClose, onNavigate, lang }) => {
+    const t = translations[lang];
     const [notiCount, setNotiCount] = useState(0);
-    const [latestMessage, setLatestMessage] = useState<string>('Bem-vindo(a). Tens novas atualizações na tua conta.');
+    const [latestMessage, setLatestMessage] = useState<string>(lang === 'pt' ? 'Bem-vindo(a). Tens novas atualizações na tua conta.' : 'Welcome. You have new updates on your account.');
     const [groupUrl, setGroupUrl] = useState<string | null>(null);
     const [showFeedback, setShowFeedback] = useState<string | null>(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -69,7 +72,7 @@ export const WelcomePopup: React.FC<WelcomePopupProps> = ({ onClose, onNavigate 
 
     const handleJoinGroup = () => {
         if (!groupUrl || groupUrl.trim() === '') {
-            setShowFeedback('Prezado cliente, lamentamos por não conseguir entrar em contato com o grupo de vendas no momento. Por favor, aguarde ou tente mais tarde.');
+            setShowFeedback(lang === 'pt' ? 'Prezado cliente, lamentamos por não conseguir entrar em contato com o grupo de vendas no momento. Por favor, aguarde ou tente mais tarde.' : 'Dear customer, we regret that we are unable to contact the sales group at this time. Please wait or try again later.');
             setTimeout(() => setShowFeedback(null), 4000);
             return;
         }
@@ -104,8 +107,8 @@ export const WelcomePopup: React.FC<WelcomePopupProps> = ({ onClose, onNavigate 
                     </div>
 
                     <div className="space-y-2">
-                        <h2 className="text-xl font-black text-dark dark:text-white tracking-tight">Mensagem de boas-vindas</h2>
-                        <p className="text-xs font-bold text-primary uppercase tracking-[0.2em]">Tens {notiCount} notificações</p>
+                        <h2 className="text-xl font-black text-dark dark:text-white tracking-tight">{lang === 'pt' ? 'Mensagem de boas-vindas' : 'Welcome Message'}</h2>
+                        <p className="text-xs font-bold text-primary uppercase tracking-[0.2em]">{lang === 'pt' ? `Tens ${notiCount} notificações` : `You have ${notiCount} notifications`}</p>
                     </div>
 
                     <div className="bg-gray-50 dark:bg-white/5 p-5 rounded-3xl border border-gray-100 dark:border-white/5">
@@ -122,14 +125,14 @@ export const WelcomePopup: React.FC<WelcomePopupProps> = ({ onClose, onNavigate 
                             }}
                             className="w-full py-4 bg-dark dark:bg-primary text-white font-bold rounded-2xl shadow-xl shadow-dark/10 dark:shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
                         >
-                            Ir para notificações
+                            {lang === 'pt' ? 'Ir para notificações' : 'Go to notifications'}
                             <span className="material-symbols-outlined text-sm">notifications</span>
                         </button>
                         <button
                             onClick={handleJoinGroup}
                             className="w-full py-4 bg-white dark:bg-transparent text-gray-600 dark:text-gray-400 font-bold rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-all flex items-center justify-center gap-2"
                         >
-                            Entrar no grupo de vendas
+                            {lang === 'pt' ? 'Entrar no grupo de vendas' : 'Join sales group'}
                             <span className="material-symbols-outlined text-sm">groups</span>
                         </button>
                     </div>

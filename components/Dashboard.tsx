@@ -81,8 +81,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     View.PRODUCTS,
     View.INVITATION,
     View.PROFILE,
-    View.TRANSACTION_HISTORY,
-    View.GIFT
+    View.TRANSACTION_HISTORY
   ];
   const showBottomNav = mainViews.includes(currentView);
 
@@ -260,6 +259,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <WelcomePopup
           onClose={() => setShowWelcome(false)}
           onNavigate={(view) => setCurrentView(view)}
+          lang={appLanguage}
         />
       )}
     </div>

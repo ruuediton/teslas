@@ -168,22 +168,22 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 relative pb-24 overflow-hidden">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-dark relative pb-24 overflow-hidden">
       {/* Header */}
-      <div className="bg-white px-6 py-4 flex items-center sticky top-0 z-10 border-b border-gray-100 shadow-sm">
-        <button onClick={onBack} className="w-10 h-10 flex items-center justify-center text-dark hover:bg-gray-50 rounded-full transition-all">
+      <div className="bg-white dark:bg-dark px-6 py-4 flex items-center sticky top-0 z-10 border-b border-gray-100 dark:border-white/5 shadow-sm">
+        <button onClick={onBack} className="w-10 h-10 flex items-center justify-center text-dark dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 rounded-full transition-all">
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
-        <h1 className="flex-1 text-center font-bold text-dark pr-10">
+        <h1 className="flex-1 text-center font-bold text-dark dark:text-white pr-10">
           {lang === 'pt' ? 'Converter Bônus' : 'Convert Bonus'}
         </h1>
       </div>
 
       <div className="p-6 space-y-6 overflow-y-auto flex-1">
         {/* Banner Motivacional */}
-        <div className="bg-blue-50 border border-blue-100 p-5 rounded-2xl flex gap-3">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 p-5 rounded-2xl flex gap-3">
           <span className="material-symbols-outlined text-blue-500">info</span>
-          <p className="text-xs text-blue-700 font-bold leading-relaxed uppercase tracking-tight">
+          <p className="text-xs text-blue-700 dark:text-blue-400 font-bold leading-relaxed uppercase tracking-tight">
             {lang === 'pt'
               ? 'CONVERTA SEUS BÔNUS EM SALDO PRINCIPAL PARA USAR EM RECARGAS, INVESTIMENTOS E TRANSFERÊNCIAS INSTANTÂNEAS'
               : 'CONVERT YOUR BONUSES INTO MAIN BALANCE FOR RECHARGES, INVESTMENTS, AND INSTANT TRANSFERS'}
@@ -192,36 +192,36 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
 
         {/* Pending Subordinates Horizontal List */}
         <div className="space-y-4">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">
+          <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">
             {lang === 'pt' ? 'Subordinados Disponíveis' : 'Available Subordinates'}
           </h3>
 
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
             {loading ? (
-              <div className="h-20 w-full animate-pulse bg-gray-200 rounded-2xl" />
+              <div className="h-20 w-full animate-pulse bg-gray-200 dark:bg-white/5 rounded-2xl" />
             ) : pendingSubordinates.length > 0 ? (
               pendingSubordinates.map((sub) => (
                 <button
                   key={sub.id}
                   onClick={() => handleCopy(sub.telefone_subordinado, sub.valor)}
-                  className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm min-w-[200px] flex items-center justify-between group active:scale-95 transition-all text-left"
+                  className="bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 p-4 rounded-2xl shadow-sm min-w-[200px] flex items-center justify-between group active:scale-95 transition-all text-left"
                 >
                   <div className="space-y-1">
-                    <p className="text-xs font-black text-dark dark:text-gray-800">
+                    <p className="text-xs font-black text-dark dark:text-white">
                       {sub.telefone_subordinado}
                     </p>
                     <p className="text-[10px] font-bold text-primary">
                       {sub.valor.toLocaleString('pt-AO')} Kz
                     </p>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                  <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
                     <span className="material-symbols-outlined text-lg">content_copy</span>
                   </div>
                 </button>
               ))
             ) : (
-              <div className="w-full text-center py-8 bg-white rounded-2xl border border-dashed border-gray-200">
-                <p className="text-xs font-bold text-gray-400">
+              <div className="w-full text-center py-8 bg-white dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+                <p className="text-xs font-bold text-gray-400 dark:text-gray-500">
                   {lang === 'pt' ? 'Nenhum bônus disponível para conversão' : 'No bonuses available for conversion'}
                 </p>
               </div>
@@ -231,39 +231,39 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
 
         {/* Conversion Form */}
         <form onSubmit={handleConvert} className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl space-y-6">
+          <div className="bg-white dark:bg-dark-card p-6 rounded-[32px] border border-gray-100 dark:border-white/5 shadow-xl space-y-6">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1">
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">
                 {lang === 'pt' ? 'Número do Subordinado' : 'Subordinate Number'}
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-xl">person_search</span>
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600 text-xl">person_search</span>
                 <input
                   type="text"
                   value={targetPhone}
                   onChange={(e) => setTargetPhone(e.target.value)}
                   placeholder={lang === 'pt' ? 'Cole ou digite o número' : 'Paste or type number'}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold transition-all"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-white/5 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold text-dark dark:text-white transition-all"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1">
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">
                 {lang === 'pt' ? 'Valor para Conversão' : 'Amount to Convert'}
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-xl">payments</span>
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600 text-xl">payments</span>
                 <input
                   type="number"
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold transition-all"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-white/5 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold text-dark dark:text-white transition-all"
                   required
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-300">Kz</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-300 dark:text-gray-600">Kz</span>
               </div>
             </div>
           </div>
@@ -285,7 +285,7 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
             <button
               type="button"
               onClick={onBack}
-              className="w-full bg-white text-gray-400 font-bold py-4 rounded-2xl border border-gray-100 hover:bg-gray-50 transition-all"
+              className="w-full bg-white dark:bg-white/5 text-gray-400 dark:text-gray-500 font-bold py-4 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
             >
               {lang === 'pt' ? 'Cancelar' : 'Cancel'}
             </button>
@@ -296,9 +296,9 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
       {/* Snackbar Feedback */}
       {showFeedback && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-8 pointer-events-none">
-          <div className={`p-6 rounded-[32px] shadow-2xl flex flex-col items-center gap-3 animate-in zoom-in-90 fade-in duration-300 max-w-[280px] text-center pointer-events-auto ${showFeedback.type === 'success' ? 'bg-white border-2 border-green-500' : 'bg-white border-2 border-red-500'
+          <div className={`p-6 rounded-[32px] shadow-2xl flex flex-col items-center gap-3 animate-in zoom-in-90 fade-in duration-300 max-w-[280px] text-center pointer-events-auto ${showFeedback.type === 'success' ? 'bg-white dark:bg-dark-card border-2 border-green-500' : 'bg-white dark:bg-dark-card border-2 border-red-500'
             }`}>
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-1 ${showFeedback.type === 'success' ? 'bg-green-50' : 'bg-red-50'
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-1 ${showFeedback.type === 'success' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
               }`}>
               <span className={`material-symbols-outlined text-4xl ${showFeedback.type === 'success' ? 'text-green-500' : 'text-red-500'
                 }`}>
@@ -309,7 +309,7 @@ export const ConvertBonusPage: React.FC<ConvertBonusPageProps> = ({ onBack, lang
               }`}>
               {showFeedback.type === 'success' ? (lang === 'pt' ? 'Sucesso!' : 'Success!') : (lang === 'pt' ? 'Erro!' : 'Error!')}
             </p>
-            <p className="text-sm font-bold text-dark/70 leading-relaxed">
+            <p className="text-sm font-bold text-dark/70 dark:text-white/70 leading-relaxed">
               {showFeedback.message}
             </p>
           </div>

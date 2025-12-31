@@ -76,17 +76,19 @@ const App: React.FC = () => {
             />
           ) : (
             showRegister ? (
-              <RegisterScreen onBackToLogin={() => setShowRegister(false)} />
+              <RegisterScreen onBackToLogin={() => setShowRegister(false)} lang={language} theme={theme} />
             ) : (
               <LoginScreen
                 onLogin={handleLogin}
                 onGoToRegister={() => setShowRegister(true)}
+                lang={language}
+                theme={theme}
               />
             )
           )}
         </React.Suspense>
       </div>
-      <Loading />
+      <Loading lang={language} />
     </LoadingProvider>
   );
 };

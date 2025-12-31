@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
-import { supabase } from '../supabaseClient';
-import { useLoading } from './LoadingContext';
+import { Language, Theme } from '../types';
+import { translations } from '../translations';
 
 interface RegisterScreenProps {
   onBackToLogin: () => void;
+  lang: Language;
+  theme: Theme;
 }
 
-export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin }) => {
+export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin, lang, theme }) => {
+  const t = translations[lang];
   const { setIsLoading } = useLoading();
   const [formData, setFormData] = useState({
     phone: '',
@@ -36,29 +38,29 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
     e.preventDefault();
 
     if (!formData.phone || !formData.password || !formData.confirmPassword || !formData.inviteCode) {
-      triggerFeedback('error', 'Por favor, preencha todos os campos obrigatórios.');
+      triggerFeedback('error', lang === 'pt' ? 'Por favor, preencha todos os campos obrigatórios.' : 'Please fill in all required fields.');
       return;
     }
 
     const phoneRegex = /^9[0-9]{8}$/;
     if (!phoneRegex.test(formData.phone)) {
-      triggerFeedback('error', 'Por favor, insira um número de telefone válido de Angola.');
+      triggerFeedback('error', lang === 'pt' ? 'Por favor, insira um número de telefone válido de Angola.' : 'Please enter a valid Angola phone number.');
       return;
     }
 
     if (formData.password.length < 8) {
-      triggerFeedback('error', 'A senha deve ter no mínimo 8 caracteres.');
+      triggerFeedback('error', lang === 'pt' ? 'A senha deve ter no mínimo 8 caracteres.' : 'Password must be at least 8 characters long.');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      triggerFeedback('error', 'As senhas não coincidem.');
+      triggerFeedback('error', lang === 'pt' ? 'As senhas não coincidem.' : 'Passwords do not match.');
       return;
     }
 
     // Validação estrita do Código de Convite (OBRIGATÓRIO)
     if (formData.inviteCode.trim() === '') {
-      triggerFeedback('error', 'O código de convite é obrigatório para novos registros.');
+      triggerFeedback('error', lang === 'pt' ? 'O código de convite é obrigatório para novos registros.' : 'Invitation code is required for new registrations.');
       return;
     }
 
@@ -73,8 +75,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
         .single();
 
       if (inviteError || !convidador) {
-        triggerFeedback('error', 'Código de convite inválido ou não encontrado.');
-        setIsRegistering(false);
+        triggerFeedback('error', lang === 'pt' ? 'Código de convite inválido ou não encontrado.' : 'Invalid or not found invitation code.');
+        setIsLoading(false);
         return;
       }
 
@@ -88,11 +90,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
 
       if (authError) {
         if (authError.message.includes('already registered')) {
-          triggerFeedback('error', 'Este número de telefone já está registrado.');
+          triggerFeedback('error', lang === 'pt' ? 'Este número de telefone já está registrado.' : 'This phone number is already registered.');
         } else {
-          triggerFeedback('error', 'Erro ao criar conta: ' + authError.message);
+          triggerFeedback('error', (lang === 'pt' ? 'Erro ao criar conta: ' : 'Error creating account: ') + authError.message);
         }
-        setIsRegistering(false);
+        setIsLoading(false);
         return;
       }
 
@@ -113,8 +115,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
           ]);
 
         if (profileError) {
-          triggerFeedback('error', 'Erro ao salvar perfil: ' + profileError.message);
-          setIsRegistering(false);
+          triggerFeedback('error', (lang === 'pt' ? 'Erro ao salvar perfil: ' : 'Error saving profile: ') + profileError.message);
+          setIsLoading(false);
           return;
         }
 
@@ -138,14 +140,14 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
           // mas logamos o erro para auditoria.
         }
 
-        triggerFeedback('success', 'Cadastro realizado com sucesso!');
+        triggerFeedback('success', lang === 'pt' ? 'Cadastro realizado com sucesso!' : 'Registration successful!');
         setTimeout(() => {
           onBackToLogin();
         }, 2000);
       }
     } catch (err: any) {
       console.error('Catch Error:', err);
-      triggerFeedback('error', 'Ocorreu um erro inesperado.');
+      triggerFeedback('error', lang === 'pt' ? 'Ocorreu um erro inesperado.' : 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -154,63 +156,63 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
   const isInviteCodeInvalid = formData.inviteCode.trim() !== '' && !/^[a-zA-Z0-9]{6,}$/.test(formData.inviteCode);
 
   return (
-    <div className="flex min-h-screen w-full flex-col lg:flex-row overflow-hidden bg-white animate-in slide-in-from-right duration-500">
+    <div className="flex min-h-screen w-full flex-col lg:flex-row overflow-hidden bg-white dark:bg-dark animate-in slide-in-from-right duration-500">
       {/* Coluna Esquerda: Formulário */}
-      <div className="flex flex-col justify-center px-8 py-12 lg:w-[40%] xl:w-[35%] lg:px-20 z-10 bg-white">
+      <div className="flex flex-col justify-center px-8 py-12 lg:w-[40%] xl:w-[35%] lg:px-20 z-10 bg-white dark:bg-dark">
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-primary p-2 rounded-lg">
               <span className="material-symbols-outlined text-white">account_balance</span>
             </div>
-            <span className="text-2xl font-bold tracking-tight text-dark">DeepBank</span>
+            <span className="text-2xl font-bold tracking-tight text-dark dark:text-white">DeepBank</span>
           </div>
           <button
             onClick={onBackToLogin}
-            className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-400 hover:text-dark rounded-full transition-all"
+            className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-dark dark:hover:text-white rounded-full transition-all"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
         </div>
 
         <div className="max-w-md w-full">
-          <h1 className="text-4xl font-extrabold text-dark mb-4">Criar conta</h1>
-          <p className="text-gray-500 mb-10 leading-relaxed">
-            Junte-se ao DeepBank e comece a gerenciar seu futuro financeiro hoje mesmo em Angola.
+          <h1 className="text-4xl font-extrabold text-dark dark:text-white mb-4">{lang === 'pt' ? 'Criar conta' : 'Create account'}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mb-10 leading-relaxed">
+            {lang === 'pt' ? 'Junte-se ao DeepBank e comece a gerenciar seu futuro financeiro hoje mesmo em Angola.' : 'Join DeepBank and start managing your financial future today in Angola.'}
           </p>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-semibold text-dark mb-2">Número de Telefone</label>
+              <label className="block text-sm font-semibold text-dark dark:text-white mb-2">{lang === 'pt' ? 'Número de Telefone' : 'Phone Number'}</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">call</span>
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 text-xl">call</span>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="9XX XXX XXX"
                   maxLength={9}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                  className="w-full pl-12 pr-4 py-3 bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-dark dark:text-white"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-dark mb-2">Senha</label>
+              <label className="block text-sm font-semibold text-dark dark:text-white mb-2">{lang === 'pt' ? 'Senha' : 'Password'}</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">lock</span>
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 text-xl">lock</span>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Mínimo 8 caracteres"
-                  className="w-full pl-12 pr-12 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                  placeholder={lang === 'pt' ? 'Mínimo 8 caracteres' : 'Minimum 8 characters'}
+                  className="w-full pl-12 pr-12 py-3 bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-dark dark:text-white"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-dark"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-dark dark:hover:text-white"
                 >
                   <span className="material-symbols-outlined text-xl">
                     {showPassword ? 'visibility_off' : 'visibility'}
@@ -220,22 +222,22 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-dark mb-2">Confirmar Senha</label>
+              <label className="block text-sm font-semibold text-dark dark:text-white mb-2">{lang === 'pt' ? 'Confirmar Senha' : 'Confirm Password'}</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">lock_clock</span>
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 text-xl">lock_clock</span>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  placeholder="Repita sua senha"
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                  placeholder={lang === 'pt' ? 'Repita sua senha' : 'Repeat your password'}
+                  className="w-full pl-12 pr-4 py-3 bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-dark dark:text-white"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-dark mb-2">Código de Convite (Obrigatório)</label>
+              <label className="block text-sm font-semibold text-dark dark:text-white mb-2">{lang === 'pt' ? 'Código de Convite (Obrigatório)' : 'Invitation Code (Required)'}</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary text-xl">card_membership</span>
                 <input
@@ -244,17 +246,17 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
                   onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })}
                   placeholder="Ex: VIP2025"
                   required
-                  className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all outline-none bg-primary/5 ${isInviteCodeInvalid ? 'border-red-300 ring-2 ring-red-50' : 'border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20'}`}
+                  className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all outline-none bg-primary/5 dark:bg-primary/10 ${isInviteCodeInvalid ? 'border-red-300 ring-2 ring-red-50 dark:ring-red-900/20' : 'border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:text-white'}`}
                 />
               </div>
               {isInviteCodeInvalid ? (
                 <p className="text-[10px] text-red-500 font-bold mt-1 ml-1 animate-pulse flex items-center gap-1">
                   <span className="material-symbols-outlined text-[12px]">error</span>
-                  O código deve ter pelo menos 6 caracteres alfanuméricos.
+                  {lang === 'pt' ? 'O código deve ter pelo menos 6 caracteres alfanuméricos.' : 'The code must have at least 6 alphanumeric characters.'}
                 </p>
               ) : (
                 <p className="text-[10px] text-primary font-bold mt-1 ml-1">
-                  Campo obrigatório. Peça seu código a um membro oficial.
+                  {lang === 'pt' ? 'Campo obrigatório. Peça seu código a um membro oficial.' : 'Required field. Ask an official member for your code.'}
                 </p>
               )}
             </div>
@@ -263,18 +265,18 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
               type="submit"
               className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 group mt-6"
             >
-              Registrar-se
+              {lang === 'pt' ? 'Registrar-se' : 'Sign up'}
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform text-xl">rocket_launch</span>
             </button>
           </form>
 
-          <p className="mt-8 text-center text-gray-500 text-sm">
-            Já tem uma conta?{' '}
+          <p className="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+            {lang === 'pt' ? 'Já tem uma conta?' : 'Already have an account?'} {' '}
             <button
               onClick={onBackToLogin}
               className="text-primary font-bold hover:underline"
             >
-              Entrar aqui
+              {lang === 'pt' ? 'Entrar aqui' : 'Login here'}
             </button>
           </p>
         </div>
@@ -293,10 +295,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
             <span className="material-symbols-outlined text-accent text-5xl">auto_awesome</span>
           </div>
           <h2 className="text-5xl font-extrabold text-white mb-6 leading-tight">
-            Sua rede é sua <span className="text-accent">maior riqueza</span>.
+            {lang === 'pt' ? 'Sua rede é sua ' : 'Your network is your '} <span className="text-accent">{lang === 'pt' ? 'maior riqueza' : 'greatest wealth'}</span>.
           </h2>
           <p className="text-lg text-white/80 font-medium leading-relaxed">
-            Convide amigos, suba de nível e ganhe comissões recorrentes com o sistema de indicação exclusivo DeepBank.
+            {lang === 'pt'
+              ? 'Convide amigos, suba de nível e ganhe comissões recorrentes com o sistema de indicação exclusivo DeepBank.'
+              : 'Invite friends, level up and earn recurring commissions with DeepBank\'s exclusive referral system.'}
           </p>
         </div>
       </div>
@@ -304,9 +308,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
       {/* Notificação de Feedback Centralizada */}
       {showFeedback && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-8 pointer-events-none">
-          <div className={`p-6 rounded-[32px] shadow-2xl flex flex-col items-center gap-3 animate-in zoom-in-90 fade-in duration-300 max-w-[280px] text-center pointer-events-auto ${showFeedback.type === 'success' ? 'bg-white border-2 border-green-500' : 'bg-white border-2 border-red-500'
+          <div className={`p-6 rounded-[32px] shadow-2xl flex flex-col items-center gap-3 animate-in zoom-in-90 fade-in duration-300 max-w-[280px] text-center pointer-events-auto ${showFeedback.type === 'success'
+            ? 'bg-white dark:bg-dark-card border-2 border-green-500'
+            : 'bg-white dark:bg-dark-card border-2 border-red-500'
             }`}>
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-1 ${showFeedback.type === 'success' ? 'bg-green-50' : 'bg-red-50'
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-1 ${showFeedback.type === 'success'
+              ? 'bg-green-50 dark:bg-green-900/20'
+              : 'bg-red-50 dark:bg-red-900/20'
               }`}>
               <span className={`material-symbols-outlined text-4xl ${showFeedback.type === 'success' ? 'text-green-500' : 'text-red-500'
                 }`}>
@@ -315,9 +323,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
             </div>
             <p className={`text-base font-extrabold ${showFeedback.type === 'success' ? 'text-green-600' : 'text-red-600'
               }`}>
-              {showFeedback.type === 'success' ? 'Sucesso!' : 'Ocorreu um Erro'}
+              {showFeedback.type === 'success' ? (lang === 'pt' ? 'Sucesso!' : 'Success!') : (lang === 'pt' ? 'Ocorreu um Erro' : 'An Error Occurred')}
             </p>
-            <p className="text-sm font-bold text-dark/70 leading-relaxed">
+            <p className="text-sm font-bold text-dark/70 dark:text-white/70 leading-relaxed">
               {showFeedback.message}
             </p>
           </div>
