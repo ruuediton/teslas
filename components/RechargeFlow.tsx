@@ -241,17 +241,29 @@ export const RechargeFlow: React.FC<RechargeFlowProps> = ({ onBack, lang }) => {
             <div key={item.id} className="bg-white dark:bg-dark-card p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm flex flex-col gap-3 group active:scale-[0.99] transition-all">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${item.status === 'Aprovado' ? 'bg-green-50 dark:bg-green-900/20 text-green-500' : 'bg-orange-50 dark:bg-orange-900/20 text-orange-500'
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${item.status === 'Aprovado' ? 'bg-green-50 dark:bg-green-900/20 text-green-500' :
+                      item.status === 'Falha' ? 'bg-red-50 dark:bg-red-900/20 text-red-500' :
+                        'bg-orange-50 dark:bg-orange-900/20 text-orange-500'
                     }`}>
-                    <span className="material-symbols-outlined text-xl">{item.status === 'Aprovado' ? 'check_circle' : 'pending'}</span>
+                    <span className="material-symbols-outlined text-xl">
+                      {item.status === 'Aprovado' ? 'check_circle' : item.status === 'Falha' ? 'cancel' : 'pending'}
+                    </span>
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-dark dark:text-white">{item.title}</h4>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-tighter">{item.date}</p>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-tighter">{item.date}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex flex-col items-end gap-1">
                   <p className="text-base font-black text-dark dark:text-white">{formatCurrency(item.amount)} Kz</p>
+                  <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${item.status === 'Aprovado' ? 'bg-green-100/50 text-green-600 dark:bg-green-900/40 dark:text-green-400' :
+                      item.status === 'Falha' ? 'bg-red-100/50 text-red-600 dark:bg-red-900/40 dark:text-red-400' :
+                        'bg-orange-100/50 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400'
+                    }`}>
+                    {item.status}
+                  </span>
                 </div>
               </div>
             </div>
